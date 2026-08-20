@@ -1,6 +1,6 @@
-import { ProjectForm } from "@/components/project-form";
-import { api } from "@/lib/api";
-import type { Project } from "@/lib/types";
+import { ProjectForm } from '@/components/project-form';
+import { api } from '@/lib/api';
+import type { Project } from '@/lib/types';
 
 export default async function EditProjectPage({
   params,

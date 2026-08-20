@@ -8,7 +8,9 @@ export class DashboardController {
   constructor(private readonly service: DashboardService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Dashboard overview (project totals, inventory, performance)' })
+  @ApiOperation({
+    summary: 'Dashboard overview (project totals, inventory, performance)',
+  })
   getOverview() {
     return this.service.getOverview();
   }

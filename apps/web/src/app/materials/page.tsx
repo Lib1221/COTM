@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import Link from "next/link";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from 'react';
+import Link from 'next/link';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   useReactTable,
   getCoreRowModel,
@@ -10,15 +10,15 @@ import {
   flexRender,
   createColumnHelper,
   type SortingState,
-} from "@tanstack/react-table";
-import { api } from "@/lib/api";
-import type { Material, PaginatedResponse } from "@/lib/types";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+} from '@tanstack/react-table';
+import { api } from '@/lib/api';
+import type { Material, PaginatedResponse } from '@/lib/types';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 
 export default function MaterialsPage() {
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
   const [sorting, setSorting] = useState<SortingState>([]);
   const [{ pageIndex, pageSize }, setPagination] = useState({
     pageIndex: 0,
@@ -27,13 +27,13 @@ export default function MaterialsPage() {
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
-    queryKey: ["materials", { search, sorting, pageIndex, pageSize }],
+    queryKey: ['materials', { search, sorting, pageIndex, pageSize }],
     queryFn: () => {
       const params = new URLSearchParams({
         page: String(pageIndex + 1),
         pageSize: String(pageSize),
       });
-      if (search) params.set("search", search);
+      if (search) params.set('search', search);
       return api.get<PaginatedResponse<Material>>(`/materials?${params}`);
     },
   });
@@ -41,8 +41,8 @@ export default function MaterialsPage() {
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api.delete(`/materials/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["materials"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ['materials'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 
@@ -51,27 +51,44 @@ export default function MaterialsPage() {
   const table = useReactTable({
     data: data?.data ?? [],
     columns: [
-      columnHelper.accessor("code", { header: "Code", cell: (i) => i.getValue() }),
-      columnHelper.accessor("name", { header: "Name", cell: (i) => i.getValue() }),
-      columnHelper.accessor("unit", { header: "Unit", cell: (i) => i.getValue() }),
-      columnHelper.accessor("currentStock", {
-        header: "Current Stock",
+      columnHelper.accessor('code', {
+        header: 'Code',
         cell: (i) => i.getValue(),
       }),
-      columnHelper.accessor("minimumStock", {
-        header: "Min Stock",
+      columnHelper.accessor('name', {
+        header: 'Name',
         cell: (i) => i.getValue(),
       }),
-      columnHelper.accessor("isLowStock", {
-        header: "Status",
+      columnHelper.accessor('unit', {
+        header: 'Unit',
+        cell: (i) => i.getValue(),
+      }),
+      columnHelper.accessor('currentStock', {
+        header: 'Current Stock',
+        cell: (i) => i.getValue(),
+      }),
+      columnHelper.accessor('minimumStock', {
+        header: 'Min Stock',
+        cell: (i) => i.getValue(),
+      }),
+      columnHelper.accessor('isLowStock', {
+        header: 'Status',
         cell: (i) =>
-          i.getValue() ? <Badge variant="warning">Low Stock</Badge> : <Badge variant="success">In Stock</Badge>,
+          i.getValue() ? (
+            <Badge variant="warning">Low Stock</Badge>
+          ) : (
+            <Badge variant="success">In Stock</Badge>
+          ),
       }),
       columnHelper.display({
-        id: "actions",
-        header: "",
+        id: 'actions',
+        header: '',
         cell: (i) => (
-          <Button variant="ghost" size="sm" onClick={() => deleteMutation.mutate(i.row.original.id)}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => deleteMutation.mutate(i.row.original.id)}
+          >
             Delete
           </Button>
         ),
@@ -116,9 +133,12 @@ export default function MaterialsPage() {
                     className="cursor-pointer p-3 text-left font-medium text-muted-foreground"
                     onClick={header.column.getToggleSortingHandler()}
                   >
-                    {flexRender(header.column.columnDef.header, header.getContext())}
-                    {header.column.getIsSorted() === "asc" && " ↑"}
-                    {header.column.getIsSorted() === "desc" && " ↓"}
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext(),
+                    )}
+                    {header.column.getIsSorted() === 'asc' && ' ↑'}
+                    {header.column.getIsSorted() === 'desc' && ' ↓'}
                   </th>
                 ))}
               </tr>
@@ -126,15 +146,35 @@ export default function MaterialsPage() {
           </thead>
           <tbody>
             {isLoading ? (
-              <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">Loading...</td></tr>
+              <tr>
+                <td
+                  colSpan={7}
+                  className="p-6 text-center text-muted-foreground"
+                >
+                  Loading...
+                </td>
+              </tr>
             ) : table.getRowModel().rows.length === 0 ? (
-              <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">No materials found.</td></tr>
+              <tr>
+                <td
+                  colSpan={7}
+                  className="p-6 text-center text-muted-foreground"
+                >
+                  No materials found.
+                </td>
+              </tr>
             ) : (
               table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="border-b last:border-0 hover:bg-muted/30">
+                <tr
+                  key={row.id}
+                  className="border-b last:border-0 hover:bg-muted/30"
+                >
                   {row.getVisibleCells().map((cell) => (
                     <td key={cell.id} className="p-3">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
                     </td>
                   ))}
                 </tr>
@@ -145,7 +185,12 @@ export default function MaterialsPage() {
       </div>
 
       <div className="flex items-center gap-2">
-        <Button variant="outline" size="sm" onClick={() => table.previousPage()} disabled={pageIndex === 0}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => table.previousPage()}
+          disabled={pageIndex === 0}
+        >
           Previous
         </Button>
         <span className="text-sm text-muted-foreground">

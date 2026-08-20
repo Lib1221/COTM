@@ -1,4 +1,4 @@
-export type ProjectStatus = "PLANNED" | "ONGOING" | "COMPLETED";
+export type ProjectStatus = 'PLANNED' | 'ONGOING' | 'COMPLETED';
 
 export interface Project {
   id: string;
@@ -52,7 +52,7 @@ export interface InventoryTransaction {
   id: string;
   materialId: string;
   projectId: string | null;
-  type: "STOCK_IN" | "STOCK_OUT";
+  type: 'STOCK_IN' | 'STOCK_OUT';
   quantity: number;
   date: string;
   reference: string | null;

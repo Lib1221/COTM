@@ -1,10 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  Query,
-} from '@nestjs/common';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { InventoryService } from './inventory.service';
 import { StockInDto, StockOutDto } from './dto/stock-transaction.dto';
@@ -16,7 +10,9 @@ export class InventoryController {
   constructor(private readonly service: InventoryService) {}
 
   @Get('transactions')
-  @ApiOperation({ summary: 'List inventory transactions (filter, sort, pagination)' })
+  @ApiOperation({
+    summary: 'List inventory transactions (filter, sort, pagination)',
+  })
   findAll(@Query() query: QueryInventoryDto) {
     return this.service.findAll(query);
   }
@@ -28,7 +24,9 @@ export class InventoryController {
   }
 
   @Post('stock-out')
-  @ApiOperation({ summary: 'Record a stock-out transaction (validates available stock)' })
+  @ApiOperation({
+    summary: 'Record a stock-out transaction (validates available stock)',
+  })
   stockOut(@Body() dto: StockOutDto) {
     return this.service.stockOut(dto);
   }

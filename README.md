@@ -4,12 +4,12 @@ A full-stack construction management system for creating projects, defining BOQs
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
+| Layer    | Technology                                                                                                                 |
+| -------- | -------------------------------------------------------------------------------------------------------------------------- |
 | Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS 4, shadcn/ui (manual), TanStack Query, TanStack Table, React Hook Form, Zod |
-| Backend | NestJS 11, REST API, Swagger/OpenAPI, class-validator |
-| Database | PostgreSQL 16, Prisma ORM 6 |
-| DevOps | Docker Compose, pnpm workspaces, ESLint, Prettier |
+| Backend  | NestJS 11, REST API, Swagger/OpenAPI, class-validator                                                                      |
+| Database | PostgreSQL 16, Prisma ORM 6                                                                                                |
+| DevOps   | Docker Compose, pnpm workspaces, ESLint, Prettier                                                                          |
 
 ## Project Structure
 
@@ -98,51 +98,57 @@ pnpm docker:logs
 ## API Endpoints
 
 ### Projects
-| Method | Path | Description |
-|---|---|---|
-| GET | `/api/projects` | List projects (search, filter, sort, pagination) |
-| GET | `/api/projects/:id` | Get project details (BOQ, progress, inventory) |
-| POST | `/api/projects` | Create a project |
-| PATCH | `/api/projects/:id` | Update a project |
-| DELETE | `/api/projects/:id` | Delete a project |
+
+| Method | Path                | Description                                      |
+| ------ | ------------------- | ------------------------------------------------ |
+| GET    | `/api/projects`     | List projects (search, filter, sort, pagination) |
+| GET    | `/api/projects/:id` | Get project details (BOQ, progress, inventory)   |
+| POST   | `/api/projects`     | Create a project                                 |
+| PATCH  | `/api/projects/:id` | Update a project                                 |
+| DELETE | `/api/projects/:id` | Delete a project                                 |
 
 ### BOQ
-| Method | Path | Description |
-|---|---|---|
-| GET | `/api/projects/:projectId/boq` | List BOQ items + total value |
-| POST | `/api/projects/:projectId/boq` | Add a BOQ item (total auto-calculated) |
-| PATCH | `/api/projects/:projectId/boq/:id` | Update a BOQ item |
-| DELETE | `/api/projects/:projectId/boq/:id` | Delete a BOQ item |
+
+| Method | Path                               | Description                            |
+| ------ | ---------------------------------- | -------------------------------------- |
+| GET    | `/api/projects/:projectId/boq`     | List BOQ items + total value           |
+| POST   | `/api/projects/:projectId/boq`     | Add a BOQ item (total auto-calculated) |
+| PATCH  | `/api/projects/:projectId/boq/:id` | Update a BOQ item                      |
+| DELETE | `/api/projects/:projectId/boq/:id` | Delete a BOQ item                      |
 
 ### Materials
-| Method | Path | Description |
-|---|---|---|
-| GET | `/api/materials` | List materials (search, low-stock filter, pagination) |
-| GET | `/api/materials/low-stock` | List low-stock materials |
-| GET | `/api/materials/:id` | Get a material |
-| POST | `/api/materials` | Create a material |
-| PATCH | `/api/materials/:id` | Update a material |
-| DELETE | `/api/materials/:id` | Delete a material |
+
+| Method | Path                       | Description                                           |
+| ------ | -------------------------- | ----------------------------------------------------- |
+| GET    | `/api/materials`           | List materials (search, low-stock filter, pagination) |
+| GET    | `/api/materials/low-stock` | List low-stock materials                              |
+| GET    | `/api/materials/:id`       | Get a material                                        |
+| POST   | `/api/materials`           | Create a material                                     |
+| PATCH  | `/api/materials/:id`       | Update a material                                     |
+| DELETE | `/api/materials/:id`       | Delete a material                                     |
 
 ### Inventory
-| Method | Path | Description |
-|---|---|---|
-| GET | `/api/inventory/transactions` | List transactions (filter, sort, pagination) |
-| POST | `/api/inventory/stock-in` | Record stock-in (increases currentStock) |
-| POST | `/api/inventory/stock-out` | Record stock-out (validates available stock) |
+
+| Method | Path                          | Description                                  |
+| ------ | ----------------------------- | -------------------------------------------- |
+| GET    | `/api/inventory/transactions` | List transactions (filter, sort, pagination) |
+| POST   | `/api/inventory/stock-in`     | Record stock-in (increases currentStock)     |
+| POST   | `/api/inventory/stock-out`    | Record stock-out (validates available stock) |
 
 ### Progress
-| Method | Path | Description |
-|---|---|---|
-| GET | `/api/projects/:projectId/progress` | List progress records |
-| POST | `/api/projects/:projectId/progress` | Add a progress record |
-| PATCH | `/api/projects/:projectId/progress/:id` | Update a progress record |
+
+| Method | Path                                    | Description              |
+| ------ | --------------------------------------- | ------------------------ |
+| GET    | `/api/projects/:projectId/progress`     | List progress records    |
+| POST   | `/api/projects/:projectId/progress`     | Add a progress record    |
+| PATCH  | `/api/projects/:projectId/progress/:id` | Update a progress record |
 | DELETE | `/api/projects/:projectId/progress/:id` | Delete a progress record |
 
 ### Dashboard
-| Method | Path | Description |
-|---|---|---|
-| GET | `/api/dashboard` | Overview: project totals, inventory, project performance |
+
+| Method | Path             | Description                                              |
+| ------ | ---------------- | -------------------------------------------------------- |
+| GET    | `/api/dashboard` | Overview: project totals, inventory, project performance |
 
 ## Business Rules
 
@@ -154,6 +160,7 @@ pnpm docker:logs
 ## Database Schema
 
 Five entities with relationships:
+
 - `projects` 1--* `boq_items`
 - `projects` 1--* `progress_records`
 - `projects` 1--* `inventory_transactions`
@@ -168,14 +175,14 @@ pnpm --filter @cms/api run test:e2e   # e2e tests (Jest + Supertest)
 
 ## Scripts
 
-| Command | Description |
-|---|---|
-| `pnpm dev` | Start web + api in dev mode |
-| `pnpm build` | Build all packages |
-| `pnpm lint` | Lint all packages |
-| `pnpm test` | Run all tests |
-| `pnpm db:migrate` | Run Prisma migrations |
-| `pnpm db:seed` | Seed sample data |
-| `pnpm db:studio` | Open Prisma Studio |
-| `pnpm docker:up` | Start full stack via Docker |
-| `pnpm docker:down` | Stop Docker stack |
+| Command            | Description                 |
+| ------------------ | --------------------------- |
+| `pnpm dev`         | Start web + api in dev mode |
+| `pnpm build`       | Build all packages          |
+| `pnpm lint`        | Lint all packages           |
+| `pnpm test`        | Run all tests               |
+| `pnpm db:migrate`  | Run Prisma migrations       |
+| `pnpm db:seed`     | Seed sample data            |
+| `pnpm db:studio`   | Open Prisma Studio          |
+| `pnpm docker:up`   | Start full stack via Docker |
+| `pnpm docker:down` | Stop Docker stack           |

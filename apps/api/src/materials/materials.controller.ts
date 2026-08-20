@@ -22,7 +22,9 @@ export class MaterialsController {
   constructor(private readonly service: MaterialsService) {}
 
   @Get()
-  @ApiOperation({ summary: 'List materials (search, low-stock filter, sort, pagination)' })
+  @ApiOperation({
+    summary: 'List materials (search, low-stock filter, sort, pagination)',
+  })
   findAll(@Query() query: QueryMaterialDto) {
     return this.service.findAll(query);
   }

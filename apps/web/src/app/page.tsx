@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
-import { useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api";
-import type { Dashboard } from "@/lib/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { StatusBadge } from "@/components/status-badge";
-import { formatCurrency } from "@/lib/utils";
+import { useQuery } from '@tanstack/react-query';
+import { api } from '@/lib/api';
+import type { Dashboard } from '@/lib/types';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { StatusBadge } from '@/components/status-badge';
+import { formatCurrency } from '@/lib/utils';
 
 export default function DashboardPage() {
   const { data, isLoading } = useQuery({
-    queryKey: ["dashboard"],
-    queryFn: () => api.get<Dashboard>("/dashboard"),
+    queryKey: ['dashboard'],
+    queryFn: () => api.get<Dashboard>('/dashboard'),
   });
 
   if (isLoading) return <div className="text-muted-foreground">Loading...</div>;
@@ -61,7 +61,9 @@ export default function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{data.inventory.totalMaterials}</p>
+            <p className="text-3xl font-bold">
+              {data.inventory.totalMaterials}
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -78,7 +80,7 @@ export default function DashboardPage() {
               <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
                 {data.inventory.lowStock.map((m) => (
                   <li key={m.id}>
-                    {m.name} ({m.code}): {m.currentStock} {m.unit} /{" "}
+                    {m.name} ({m.code}): {m.currentStock} {m.unit} /{' '}
                     {m.minimumStock} {m.unit}
                   </li>
                 ))}

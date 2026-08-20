@@ -27,7 +27,14 @@ export class MaterialsService {
   }
 
   async findAll(query: QueryMaterialDto) {
-    const { search, lowStock, page = 1, pageSize = 10, sortBy, sortOrder } = query;
+    const {
+      search,
+      lowStock,
+      page = 1,
+      pageSize = 10,
+      sortBy,
+      sortOrder,
+    } = query;
     const where: Prisma.MaterialWhereInput = {};
     if (search) {
       where.OR = [
@@ -104,7 +111,8 @@ export class MaterialsService {
     if (!material) throw new NotFoundException(`Material ${id} not found`);
     return {
       ...material,
-      isLowStock: Number(material.currentStock) <= Number(material.minimumStock),
+      isLowStock:
+        Number(material.currentStock) <= Number(material.minimumStock),
     };
   }
 
@@ -112,7 +120,8 @@ export class MaterialsService {
     const existing = await this.prisma.material.findUnique({
       where: { code: dto.code },
     });
-    if (existing) throw new ConflictException(`Material code ${dto.code} already exists`);
+    if (existing)
+      throw new ConflictException(`Material code ${dto.code} already exists`);
     return this.prisma.material.create({
       data: {
         name: dto.name,
@@ -127,7 +136,9 @@ export class MaterialsService {
   async update(id: string, dto: UpdateMaterialDto) {
     await this.findOne(id);
     if (dto.code) {
-      const dup = await this.prisma.material.findUnique({ where: { code: dto.code } });
+      const dup = await this.prisma.material.findUnique({
+        where: { code: dto.code },
+      });
       if (dup && dup.id !== id)
         throw new ConflictException(`Material code ${dto.code} already exists`);
     }
@@ -137,7 +148,9 @@ export class MaterialsService {
         ...(dto.name !== undefined && { name: dto.name }),
         ...(dto.code !== undefined && { code: dto.code }),
         ...(dto.unit !== undefined && { unit: dto.unit }),
-        ...(dto.minimumStock !== undefined && { minimumStock: dto.minimumStock }),
+        ...(dto.minimumStock !== undefined && {
+          minimumStock: dto.minimumStock,
+        }),
       },
     });
   }

@@ -21,10 +21,30 @@ async function main() {
 
   // -------- BOQ items --------
   const boqItems = [
-    { description: 'Foundation concrete (m³)', unit: 'm³', quantity: 120, unitPrice: 3500 },
-    { description: 'Reinforcement steel (kg)', unit: 'kg', quantity: 8500, unitPrice: 95 },
-    { description: 'Brickwork (m²)', unit: 'm²', quantity: 1450, unitPrice: 620 },
-    { description: 'Plastering (m²)', unit: 'm²', quantity: 2900, unitPrice: 180 },
+    {
+      description: 'Foundation concrete (m³)',
+      unit: 'm³',
+      quantity: 120,
+      unitPrice: 3500,
+    },
+    {
+      description: 'Reinforcement steel (kg)',
+      unit: 'kg',
+      quantity: 8500,
+      unitPrice: 95,
+    },
+    {
+      description: 'Brickwork (m²)',
+      unit: 'm²',
+      quantity: 1450,
+      unitPrice: 620,
+    },
+    {
+      description: 'Plastering (m²)',
+      unit: 'm²',
+      quantity: 2900,
+      unitPrice: 180,
+    },
   ];
 
   for (const item of boqItems) {
@@ -43,11 +63,41 @@ async function main() {
 
   // -------- Materials --------
   const materials = [
-    { name: 'Cement', code: 'MAT-CEM', unit: 'bag', currentStock: 500, minimumStock: 100 },
-    { name: 'Steel', code: 'MAT-STL', unit: 'kg', currentStock: 8000, minimumStock: 2000 },
-    { name: 'Sand', code: 'MAT-SND', unit: 'm³', currentStock: 30, minimumStock: 50 },
-    { name: 'Gravel', code: 'MAT-GRV', unit: 'm³', currentStock: 45, minimumStock: 40 },
-    { name: 'Brick', code: 'MAT-BRK', unit: 'pcs', currentStock: 12000, minimumStock: 3000 },
+    {
+      name: 'Cement',
+      code: 'MAT-CEM',
+      unit: 'bag',
+      currentStock: 500,
+      minimumStock: 100,
+    },
+    {
+      name: 'Steel',
+      code: 'MAT-STL',
+      unit: 'kg',
+      currentStock: 8000,
+      minimumStock: 2000,
+    },
+    {
+      name: 'Sand',
+      code: 'MAT-SND',
+      unit: 'm³',
+      currentStock: 30,
+      minimumStock: 50,
+    },
+    {
+      name: 'Gravel',
+      code: 'MAT-GRV',
+      unit: 'm³',
+      currentStock: 45,
+      minimumStock: 40,
+    },
+    {
+      name: 'Brick',
+      code: 'MAT-BRK',
+      unit: 'pcs',
+      currentStock: 12000,
+      minimumStock: 3000,
+    },
   ];
 
   for (const m of materials) {
@@ -59,7 +109,9 @@ async function main() {
   }
 
   // -------- Inventory: stock in for Cement --------
-  const cement = await prisma.material.findUniqueOrThrow({ where: { code: 'MAT-CEM' } });
+  const cement = await prisma.material.findUniqueOrThrow({
+    where: { code: 'MAT-CEM' },
+  });
   await prisma.inventoryTransaction.create({
     data: {
       materialId: cement.id,

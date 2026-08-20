@@ -29,7 +29,14 @@ export class ProjectsService {
   }
 
   async findAll(query: QueryProjectDto) {
-    const { search, status, page = 1, pageSize = 10, sortBy, sortOrder } = query;
+    const {
+      search,
+      status,
+      page = 1,
+      pageSize = 10,
+      sortBy,
+      sortOrder,
+    } = query;
     const where: Prisma.ProjectWhereInput = {};
     if (search) {
       where.OR = [
@@ -92,14 +99,19 @@ export class ProjectsService {
       (sum, item) => sum + Number(item.total),
       0,
     );
-    return { ...project, boqValue, latestProgress: project.progressRecords[0]?.progressPercent ?? 0 };
+    return {
+      ...project,
+      boqValue,
+      latestProgress: project.progressRecords[0]?.progressPercent ?? 0,
+    };
   }
 
   async create(dto: CreateProjectDto) {
     const existing = await this.prisma.project.findUnique({
       where: { code: dto.code },
     });
-    if (existing) throw new ConflictException(`Project code ${dto.code} already exists`);
+    if (existing)
+      throw new ConflictException(`Project code ${dto.code} already exists`);
     return this.prisma.project.create({
       data: {
         name: dto.name,
@@ -116,8 +128,14 @@ export class ProjectsService {
 
   async update(id: string, dto: UpdateProjectDto) {
     await this.findOne(id);
-    if (dto.code && dto.code !== (await this.prisma.project.findUnique({ where: { id } }))?.code) {
-      const dup = await this.prisma.project.findUnique({ where: { code: dto.code } });
+    if (
+      dto.code &&
+      dto.code !==
+        (await this.prisma.project.findUnique({ where: { id } }))?.code
+    ) {
+      const dup = await this.prisma.project.findUnique({
+        where: { code: dto.code },
+      });
       if (dup && dup.id !== id)
         throw new ConflictException(`Project code ${dto.code} already exists`);
     }
@@ -128,8 +146,12 @@ export class ProjectsService {
         ...(dto.code !== undefined && { code: dto.code }),
         ...(dto.clientName !== undefined && { clientName: dto.clientName }),
         ...(dto.location !== undefined && { location: dto.location }),
-        ...(dto.startDate !== undefined && { startDate: new Date(dto.startDate) }),
-        ...(dto.endDate !== undefined && { endDate: dto.endDate ? new Date(dto.endDate) : null }),
+        ...(dto.startDate !== undefined && {
+          startDate: new Date(dto.startDate),
+        }),
+        ...(dto.endDate !== undefined && {
+          endDate: dto.endDate ? new Date(dto.endDate) : null,
+        }),
         ...(dto.budget !== undefined && { budget: dto.budget }),
         ...(dto.status !== undefined && { status: dto.status }),
       },

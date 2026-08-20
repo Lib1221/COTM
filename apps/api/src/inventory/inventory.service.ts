@@ -50,7 +50,9 @@ export class InventoryService {
         skip: (page - 1) * pageSize,
         take: pageSize,
         include: {
-          material: { select: { id: true, name: true, code: true, unit: true } },
+          material: {
+            select: { id: true, name: true, code: true, unit: true },
+          },
           project: { select: { id: true, name: true, code: true } },
         },
       }),
@@ -72,7 +74,8 @@ export class InventoryService {
     const material = await this.prisma.material.findUnique({
       where: { id: dto.materialId },
     });
-    if (!material) throw new NotFoundException(`Material ${dto.materialId} not found`);
+    if (!material)
+      throw new NotFoundException(`Material ${dto.materialId} not found`);
 
     return this.prisma.$transaction(async (tx) => {
       const transaction = await tx.inventoryTransaction.create({
@@ -105,11 +108,13 @@ export class InventoryService {
     const material = await this.prisma.material.findUnique({
       where: { id: dto.materialId },
     });
-    if (!material) throw new NotFoundException(`Material ${dto.materialId} not found`);
+    if (!material)
+      throw new NotFoundException(`Material ${dto.materialId} not found`);
     const project = await this.prisma.project.findUnique({
       where: { id: dto.projectId },
     });
-    if (!project) throw new NotFoundException(`Project ${dto.projectId} not found`);
+    if (!project)
+      throw new NotFoundException(`Project ${dto.projectId} not found`);
 
     const available = Number(material.currentStock);
     if (dto.quantity > available) {

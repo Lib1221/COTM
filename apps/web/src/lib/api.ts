@@ -1,5 +1,4 @@
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
 
 export async function apiClient<T>(
   path: string,
@@ -8,7 +7,7 @@ export async function apiClient<T>(
   const res = await fetch(`${API_URL}${path}`, {
     ...options,
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       ...(options?.headers ?? {}),
     },
   });
@@ -22,8 +21,8 @@ export async function apiClient<T>(
 export const api = {
   get: <T>(path: string) => apiClient<T>(path),
   post: <T>(path: string, data: unknown) =>
-    apiClient<T>(path, { method: "POST", body: JSON.stringify(data) }),
+    apiClient<T>(path, { method: 'POST', body: JSON.stringify(data) }),
   patch: <T>(path: string, data: unknown) =>
-    apiClient<T>(path, { method: "PATCH", body: JSON.stringify(data) }),
-  delete: <T>(path: string) => apiClient<T>(path, { method: "DELETE" }),
+    apiClient<T>(path, { method: 'PATCH', body: JSON.stringify(data) }),
+  delete: <T>(path: string) => apiClient<T>(path, { method: 'DELETE' }),
 };

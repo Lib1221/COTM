@@ -28,7 +28,9 @@ export class ProjectsController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get project details (incl. BOQ, progress, inventory)' })
+  @ApiOperation({
+    summary: 'Get project details (incl. BOQ, progress, inventory)',
+  })
   findOne(@Param('id') id: string) {
     return this.service.findOne(id);
   }

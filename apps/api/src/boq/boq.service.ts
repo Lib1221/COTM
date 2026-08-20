@@ -1,7 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBoqItemDto } from './dto/create-boq-item.dto';
 import { UpdateBoqItemDto } from './dto/update-boq-item.dto';
@@ -63,7 +60,9 @@ export class BoqService {
   }
 
   private async ensureProject(projectId: string) {
-    const project = await this.prisma.project.findUnique({ where: { id: projectId } });
+    const project = await this.prisma.project.findUnique({
+      where: { id: projectId },
+    });
     if (!project) throw new NotFoundException(`Project ${projectId} not found`);
   }
 }

@@ -1,11 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import {
-  IsNumber,
-  IsString,
-  MaxLength,
-  Min,
-} from 'class-validator';
+import { IsNumber, IsString, MaxLength, Min } from 'class-validator';
 
 export class CreateBoqItemDto {
   @ApiProperty({ example: 'Foundation concrete (m³)' })

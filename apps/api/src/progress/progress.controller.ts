@@ -27,7 +27,10 @@ export class ProgressController {
 
   @Post()
   @ApiOperation({ summary: 'Add a progress record to a project' })
-  create(@Param('projectId') projectId: string, @Body() dto: CreateProgressDto) {
+  create(
+    @Param('projectId') projectId: string,
+    @Body() dto: CreateProgressDto,
+  ) {
     return this.service.create(projectId, dto);
   }
 

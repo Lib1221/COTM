@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { cn } from '@/lib/utils';
 
 const navItems = [
-  { href: "/", label: "Dashboard" },
-  { href: "/projects", label: "Projects" },
-  { href: "/materials", label: "Materials" },
-  { href: "/inventory", label: "Inventory" },
+  { href: '/', label: 'Dashboard' },
+  { href: '/projects', label: 'Projects' },
+  { href: '/materials', label: 'Materials' },
+  { href: '/inventory', label: 'Inventory' },
 ];
 
 export function Sidebar() {
@@ -24,18 +24,18 @@ export function Sidebar() {
       <nav className="flex flex-1 flex-col gap-1 p-4">
         {navItems.map((item) => {
           const active =
-            item.href === "/"
-              ? pathname === "/"
+            item.href === '/'
+              ? pathname === '/'
               : pathname.startsWith(item.href);
           return (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                "rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                'rounded-md px-3 py-2 text-sm font-medium transition-colors',
                 active
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground',
               )}
             >
               {item.label}

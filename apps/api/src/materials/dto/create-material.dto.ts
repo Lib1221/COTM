@@ -24,7 +24,10 @@ export class CreateMaterialDto {
   @MaxLength(20)
   unit: string;
 
-  @ApiPropertyOptional({ example: 0, description: 'Initial stock (defaults to 0)' })
+  @ApiPropertyOptional({
+    example: 0,
+    description: 'Initial stock (defaults to 0)',
+  })
   @IsOptional()
   @Type(() => Number)
   @IsNumber()

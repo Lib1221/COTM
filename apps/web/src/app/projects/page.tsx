@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
+import { useState } from 'react';
+import Link from 'next/link';
+import { useQuery } from '@tanstack/react-query';
 import {
   useReactTable,
   getCoreRowModel,
@@ -11,48 +11,48 @@ import {
   flexRender,
   createColumnHelper,
   type SortingState,
-} from "@tanstack/react-table";
-import { api } from "@/lib/api";
-import type { Project, PaginatedResponse, ProjectStatus } from "@/lib/types";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { StatusBadge } from "@/components/status-badge";
-import { formatCurrency, formatDate } from "@/lib/utils";
+} from '@tanstack/react-table';
+import { api } from '@/lib/api';
+import type { Project, PaginatedResponse, ProjectStatus } from '@/lib/types';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { StatusBadge } from '@/components/status-badge';
+import { formatCurrency, formatDate } from '@/lib/utils';
 
 const columnHelper = createColumnHelper<Project>();
 
 const columns = [
-  columnHelper.accessor("code", {
-    header: "Code",
+  columnHelper.accessor('code', {
+    header: 'Code',
     cell: (info) => info.getValue(),
   }),
-  columnHelper.accessor("name", {
-    header: "Name",
+  columnHelper.accessor('name', {
+    header: 'Name',
     cell: (info) => info.getValue(),
   }),
-  columnHelper.accessor("clientName", {
-    header: "Client",
+  columnHelper.accessor('clientName', {
+    header: 'Client',
     cell: (info) => info.getValue(),
   }),
-  columnHelper.accessor("budget", {
-    header: "Budget",
+  columnHelper.accessor('budget', {
+    header: 'Budget',
     cell: (info) => formatCurrency(info.getValue()),
   }),
-  columnHelper.accessor("latestProgress", {
-    header: "Progress",
+  columnHelper.accessor('latestProgress', {
+    header: 'Progress',
     cell: (info) => `${info.getValue() ?? 0}%`,
   }),
-  columnHelper.accessor("status", {
-    header: "Status",
+  columnHelper.accessor('status', {
+    header: 'Status',
     cell: (info) => <StatusBadge status={info.getValue() as ProjectStatus} />,
   }),
-  columnHelper.accessor("createdAt", {
-    header: "Created",
+  columnHelper.accessor('createdAt', {
+    header: 'Created',
     cell: (info) => formatDate(info.getValue()),
   }),
   columnHelper.display({
-    id: "actions",
-    header: "",
+    id: 'actions',
+    header: '',
     cell: (info) => (
       <Link href={`/projects/${info.row.original.id}`}>
         <Button variant="outline" size="sm">
@@ -64,9 +64,9 @@ const columns = [
 ];
 
 export default function ProjectsPage() {
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
   const [sorting, setSorting] = useState<SortingState>([
-    { id: "createdAt", desc: true },
+    { id: 'createdAt', desc: true },
   ]);
   const [{ pageIndex, pageSize }, setPagination] = useState({
     pageIndex: 0,
@@ -74,15 +74,15 @@ export default function ProjectsPage() {
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ["projects", { search, sorting, pageIndex, pageSize }],
+    queryKey: ['projects', { search, sorting, pageIndex, pageSize }],
     queryFn: () => {
       const params = new URLSearchParams({
         page: String(pageIndex + 1),
         pageSize: String(pageSize),
-        sortBy: sorting[0]?.id ?? "createdAt",
-        sortOrder: sorting[0]?.desc ? "desc" : "asc",
+        sortBy: sorting[0]?.id ?? 'createdAt',
+        sortOrder: sorting[0]?.desc ? 'desc' : 'asc',
       });
-      if (search) params.set("search", search);
+      if (search) params.set('search', search);
       return api.get<PaginatedResponse<Project>>(`/projects?${params}`);
     },
   });
@@ -135,8 +135,8 @@ export default function ProjectsPage() {
                       header.column.columnDef.header,
                       header.getContext(),
                     )}
-                    {header.column.getIsSorted() === "asc" && " ↑"}
-                    {header.column.getIsSorted() === "desc" && " ↓"}
+                    {header.column.getIsSorted() === 'asc' && ' ↑'}
+                    {header.column.getIsSorted() === 'desc' && ' ↓'}
                   </th>
                 ))}
               </tr>
@@ -145,22 +145,34 @@ export default function ProjectsPage() {
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan={columns.length} className="p-6 text-center text-muted-foreground">
+                <td
+                  colSpan={columns.length}
+                  className="p-6 text-center text-muted-foreground"
+                >
                   Loading...
                 </td>
               </tr>
             ) : table.getRowModel().rows.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="p-6 text-center text-muted-foreground">
+                <td
+                  colSpan={columns.length}
+                  className="p-6 text-center text-muted-foreground"
+                >
                   No projects found.
                 </td>
               </tr>
             ) : (
               table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="border-b last:border-0 hover:bg-muted/30">
+                <tr
+                  key={row.id}
+                  className="border-b last:border-0 hover:bg-muted/30"
+                >
                   {row.getVisibleCells().map((cell) => (
                     <td key={cell.id} className="p-3">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
                     </td>
                   ))}
                 </tr>
