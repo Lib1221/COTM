@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Construction Management System</title>
+  <meta name="description" content="A full-stack construction management system for projects, BOQ, materials, inventory, and progress tracking." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Nav -->
+  <header class="nav">
+    <div class="nav-inner">
+      <a href="#top" class="brand">
+        <span class="brand-mark">CMS</span>
+        <span class="brand-text">Construction Management System</span>
+      </a>
+      <nav class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#architecture">Architecture</a>
+        <a href="#stack">Tech Stack</a>
+        <a href="#api">API</a>
+        <a href="https://github.com/Lib1221/COTM" class="nav-cta" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section id="top" class="hero">
+    <div class="hero-grid">
+      <div class="hero-content">
+        <span class="eyebrow">Full-Stack · TypeScript · Monorepo</span>
+        <h1>Manage construction projects from <span class="grad">BOQ to delivery</span>.</h1>
+        <p class="hero-sub">
+          A Mini Construction Management System for creating projects, defining bills of
+          quantities, tracking materials & inventory, and recording project progress —
+          built with Next.js, NestJS, Prisma & PostgreSQL.
+        </p>
+        <div class="hero-actions">
+          <a href="https://github.com/Lib1221/COTM" class="btn btn-primary" target="_blank" rel="noopener">
+            View on GitHub →
+          </a>
+          <a href="#features" class="btn btn-ghost">Explore features</a>
+        </div>
+        <div class="hero-stats">
+          <div><strong>4</strong><span>Core modules</span></div>
+          <div><strong>5</strong><span>DB entities</span></div>
+          <div><strong>16</strong><span>E2E tests</span></div>
+          <div><strong>9</strong><span>API routes</span></div>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="card-stack">
+          <div class="mock-window">
+            <div class="mock-bar">
+              <span></span><span></span><span></span>
+              <em>localhost:3000 — Dashboard</em>
+            </div>
+            <div class="mock-body">
+              <div class="mock-cards">
+                <div class="mock-card"><i>Total Projects</i><b>12</b></div>
+                <div class="mock-card"><i>Ongoing</i><b>7</b></div>
+                <div class="mock-card"><i>Completed</i><b>5</b></div>
+              </div>
+              <div class="mock-table">
+                <div class="mock-row mock-head">
+                  <span>Project</span><span>Budget</span><span>Progress</span><span>Status</span>
+                </div>
+                <div class="mock-row">
+                  <span>Residential Tower</span><span>ETB 12.5M</span>
+                  <span class="bar"><i style="width:68%"></i></span>
+                  <span class="tag tag-on">Ongoing</span>
+                </div>
+                <div class="mock-row">
+                  <span>Office Complex</span><span>ETB 8.2M</span>
+                  <span class="bar"><i style="width:100%"></i></span>
+                  <span class="tag tag-done">Completed</span>
+                </div>
+                <div class="mock-row">
+                  <span>Bridge Repair</span><span>ETB 3.4M</span>
+                  <span class="bar"><i style="width:22%"></i></span>
+                  <span class="tag tag-plan">Planned</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features" class="section">
+    <div class="section-head">
+      <span class="kicker">Core Modules</span>
+      <h2>Everything to run a construction project</h2>
+      <p>Four focused areas — no bloat, just what a construction company needs day to day.</p>
+    </div>
+    <div class="feature-grid">
+      <article class="feature">
+        <div class="feature-icon" data-c="1">⬚</div>
+        <h3>Project Management</h3>
+        <p>Create, view, edit, and delete projects. Track name, code, client, location, dates, budget, and status (Planned / Ongoing / Completed).</p>
+        <ul>
+          <li>Full CRUD with validation</li>
+          <li>Search, sort & pagination</li>
+          <li>Detail view with BOQ + progress</li>
+        </ul>
+      </article>
+      <article class="feature">
+        <div class="feature-icon" data-c="2">∑</div>
+        <h3>BOQ Management</h3>
+        <p>Define each project's Bill of Quantities with description, unit, quantity, and unit price. Totals are auto-calculated.</p>
+        <ul>
+          <li><code>Total = Quantity × Unit Price</code></li>
+          <li>Total BOQ value per project</li>
+          <li>Add / edit / delete items</li>
+        </ul>
+      </article>
+      <article class="feature">
+        <div class="feature-icon" data-c="3">▦</div>
+        <h3>Materials & Inventory</h3>
+        <p>Maintain a material inventory with current and minimum stock. Record stock-in and stock-out transactions.</p>
+        <ul>
+          <li>Stock-out blocked if > available</li>
+          <li>Low-stock warnings</li>
+          <li>Full transaction history</li>
+        </ul>
+      </article>
+      <article class="feature">
+        <div class="feature-icon" data-c="4">%</div>
+        <h3>Project Progress</h3>
+        <p>Project managers record dated progress entries with a description, percentage, and notes. The latest % shows on the project page.</p>
+        <ul>
+          <li>Progress % validation (0–100)</li>
+          <li>Latest % on dashboard</li>
+          <li>Dated progress log</li>
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <!-- Business Rules -->
+  <section class="section section-alt">
+    <div class="section-head">
+      <span class="kicker">Business Rules</span>
+      <h2>Enforced where it matters</h2>
+      <p>Critical rules are validated on both the client and server, with 16 automated e2e tests guarding them.</p>
+    </div>
+    <div class="rules-grid">
+      <div class="rule">
+        <div class="rule-no">01</div>
+        <h4>BOQ total auto-calc</h4>
+        <p><code>total = quantity × unitPrice</code> computed on create and re-computed on update.</p>
+      </div>
+      <div class="rule">
+        <div class="rule-no">02</div>
+        <h4>No negative stock</h4>
+        <p>Stock-out quantity exceeding available stock returns <code>400 Bad Request</code>.</p>
+      </div>
+      <div class="rule">
+        <div class="rule-no">03</div>
+        <h4>Low-stock warnings</h4>
+        <p>Material is flagged when <code>currentStock ≤ minimumStock</code>, surfaced on the dashboard.</p>
+      </div>
+      <div class="rule">
+        <div class="rule-no">04</div>
+        <h4>Latest progress</h4>
+        <p>Project detail & dashboard reflect the most recent progress percentage recorded.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Architecture -->
+  <section id="architecture" class="section">
+    <div class="section-head">
+      <span class="kicker">Architecture</span>
+      <h2>A clean monorepo, fully containerized</h2>
+      <p>Three services orchestrated by Docker Compose — reproducible from <code>git clone</code> to running app.</p>
+    </div>
+    <div class="arch">
+      <div class="arch-layer arch-web">
+        <div class="arch-label">Frontend</div>
+        <div class="arch-title">Next.js 16</div>
+        <div class="arch-sub">React 19 · Tailwind 4 · TanStack Query/Table · RHF + Zod</div>
+      </div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-layer arch-api">
+        <div class="arch-label">Backend</div>
+        <div class="arch-title">NestJS 11</div>
+        <div class="arch-sub">REST API · Swagger · class-validator · 7 modules</div>
+      </div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-layer arch-db">
+        <div class="arch-label">Database</div>
+        <div class="arch-title">PostgreSQL 16</div>
+        <div class="arch-sub">Prisma ORM 6 · 5 entities · migrations + seed</div>
+      </div>
+    </div>
+
+    <div class="tree">
+      <pre><code>liben/
+├── apps/
+│   ├── <b>web/</b>          <i># Next.js frontend  (port 3000)</i>
+│   └── <b>api/</b>          <i># NestJS backend   (port 4000)</i>
+├── packages/
+│   └── <b>db/</b>           <i># Shared Prisma schema + client + seed</i>
+├── docker/
+│   ├── docker-compose.yml
+│   ├── api.Dockerfile
+│   └── web.Dockerfile
+└── pnpm-workspace.yaml</code></pre>
+    </div>
+  </section>
+
+  <!-- Tech Stack -->
+  <section id="stack" class="section section-alt">
+    <div class="section-head">
+      <span class="kicker">Tech Stack</span>
+      <h2>Modern, typed end-to-end</h2>
+    </div>
+    <div class="stack-grid">
+      <div class="stack-col">
+        <h4>Frontend</h4>
+        <ul class="chips">
+          <li>Next.js 16</li><li>React 19</li><li>TypeScript</li>
+          <li>Tailwind CSS 4</li><li>shadcn/ui</li><li>TanStack Query</li>
+          <li>TanStack Table</li><li>React Hook Form</li><li>Zod</li>
+        </ul>
+      </div>
+      <div class="stack-col">
+        <h4>Backend</h4>
+        <ul class="chips">
+          <li>NestJS 11</li><li>REST API</li><li>Swagger / OpenAPI</li>
+          <li>class-validator</li><li>Jest + Supertest</li>
+        </ul>
+      </div>
+      <div class="stack-col">
+        <h4>Database</h4>
+        <ul class="chips">
+          <li>PostgreSQL 16</li><li>Prisma ORM 6</li><li>Migrations</li><li>Seed data</li>
+        </ul>
+      </div>
+      <div class="stack-col">
+        <h4>DevOps</h4>
+        <ul class="chips">
+          <li>Docker Compose</li><li>pnpm workspaces</li><li>ESLint</li>
+          <li>Prettier</li><li>GitHub Actions</li><li>GitHub Pages</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- API -->
+  <section id="api" class="section">
+    <div class="section-head">
+      <span class="kicker">REST API</span>
+      <h2>Documented with Swagger</h2>
+      <p>Every endpoint is typed, validated, and documented. Swagger UI available at <code>/api/docs</code>.</p>
+    </div>
+    <div class="api-grid">
+      <div class="api-col">
+        <h4>Projects</h4>
+        <div class="ep"><span class="m m-get">GET</span><code>/api/projects</code></div>
+        <div class="ep"><span class="m m-post">POST</span><code>/api/projects</code></div>
+        <div class="ep"><span class="m m-patch">PATCH</span><code>/api/projects/:id</code></div>
+        <div class="ep"><span class="m m-del">DEL</span><code>/api/projects/:id</code></div>
+      </div>
+      <div class="api-col">
+        <h4>BOQ</h4>
+        <div class="ep"><span class="m m-get">GET</span><code>/api/projects/:id/boq</code></div>
+        <div class="ep"><span class="m m-post">POST</span><code>/api/projects/:id/boq</code></div>
+        <div class="ep"><span class="m m-del">DEL</span><code>/api/projects/:id/boq/:id</code></div>
+      </div>
+      <div class="api-col">
+        <h4>Materials</h4>
+        <div class="ep"><span class="m m-get">GET</span><code>/api/materials</code></div>
+        <div class="ep"><span class="m m-get">GET</span><code>/api/materials/low-stock</code></div>
+        <div class="ep"><span class="m m-post">POST</span><code>/api/materials</code></div>
+      </div>
+      <div class="api-col">
+        <h4>Inventory</h4>
+        <div class="ep"><span class="m m-get">GET</span><code>/api/inventory/transactions</code></div>
+        <div class="ep"><span class="m m-post">POST</span><code>/api/inventory/stock-in</code></div>
+        <div class="ep"><span class="m m-post">POST</span><code>/api/inventory/stock-out</code></div>
+      </div>
+      <div class="api-col">
+        <h4>Progress</h4>
+        <div class="ep"><span class="m m-get">GET</span><code>/api/projects/:id/progress</code></div>
+        <div class="ep"><span class="m m-post">POST</span><code>/api/projects/:id/progress</code></div>
+      </div>
+      <div class="api-col">
+        <h4>Dashboard</h4>
+        <div class="ep"><span class="m m-get">GET</span><code>/api/dashboard</code></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quick start -->
+  <section class="section section-alt">
+    <div class="section-head">
+      <span class="kicker">Quick Start</span>
+      <h2>Up and running in minutes</h2>
+    </div>
+    <div class="quick">
+      <div class="quick-step">
+        <div class="step-no">1</div>
+        <pre><code>git clone https://github.com/Lib1221/COTM.git
+cd COTM && pnpm install</code></pre>
+      </div>
+      <div class="quick-step">
+        <div class="step-no">2</div>
+        <pre><code>pnpm docker:up        <i># postgres + api + web</i>
+pnpm db:migrate      <i># create schema</i>
+pnpm db:seed         <i># sample data</i></code></pre>
+      </div>
+      <div class="quick-step">
+        <div class="step-no">3</div>
+        <pre><code><i># web  → http://localhost:3000</i>
+<i># api  → http://localhost:4000/api</i>
+<i># docs → http://localhost:4000/api/docs</i></code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta">
+    <h2>Ready to explore the code?</h2>
+    <p>Browse the monorepo, read the README, or run it locally with Docker.</p>
+    <div class="cta-actions">
+      <a href="https://github.com/Lib1221/COTM" class="btn btn-primary" target="_blank" rel="noopener">View on GitHub →</a>
+      <a href="https://github.com/Lib1221/COTM/blob/main/README.md" class="btn btn-ghost" target="_blank" rel="noopener">Read the docs</a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div>
+        <span class="brand-mark sm">CMS</span>
+        <span class="footer-text">Construction Management System · Built with Next.js + NestJS + Prisma</span>
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/Lib1221/COTM">GitHub</a>
+        <a href="https://github.com/Lib1221/COTM/actions">Actions</a>
+        <a href="#top">Back to top ↑</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
