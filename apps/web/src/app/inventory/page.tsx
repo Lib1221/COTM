@@ -14,7 +14,6 @@ import { formatDate } from "@/lib/utils";
 export default function InventoryPage() {
   const [showStockIn, setShowStockIn] = useState(false);
   const [showStockOut, setShowStockOut] = useState(false);
-  const queryClient = useQueryClient();
 
   const { data: txData, isLoading } = useQuery({
     queryKey: ["inventory"],

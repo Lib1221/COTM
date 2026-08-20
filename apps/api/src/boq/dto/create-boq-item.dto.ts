@@ -3,7 +3,6 @@ import { Type } from 'class-transformer';
 import {
   IsNumber,
   IsString,
-  Max,
   MaxLength,
   Min,
 } from 'class-validator';
