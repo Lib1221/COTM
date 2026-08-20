@@ -1,0 +1,29 @@
+{
+  "name": "construction-management-system",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@11.22.0",
+  "scripts": {
+    "dev": "pnpm -r --parallel --filter=./apps/* run dev",
+    "build": "pnpm -r run build",
+    "lint": "pnpm -r run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "test": "pnpm -r run test",
+    "db:migrate": "pnpm --filter @cms/db exec prisma migrate dev",
+    "db:generate": "pnpm --filter @cms/db exec prisma generate",
+    "db:seed": "pnpm --filter @cms/db exec prisma db seed",
+    "db:studio": "pnpm --filter @cms/db exec prisma studio",
+    "docker:up": "docker compose -f docker/docker-compose.yml up -d --build",
+    "docker:down": "docker compose -f docker/docker-compose.yml down",
+    "docker:migrate": "docker compose -f docker/docker-compose.yml exec api pnpm --filter @cms/db exec prisma migrate deploy",
+    "docker:seed": "docker compose -f docker/docker-compose.yml exec api pnpm --filter @cms/db exec prisma db seed",
+    "docker:logs": "docker compose -f docker/docker-compose.yml logs -f"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
