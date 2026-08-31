@@ -1,16 +1,28 @@
 'use client';
 
-import { useState } from 'react';
+import * as React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import type { ProjectDetail, BoqItem, ProgressRecord } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/status-badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { BoqForm } from '@/components/boq-form';
+import { ProgressForm } from '@/components/progress-form';
 import { formatCurrency, formatDate } from '@/lib/utils';
 
 export default function ProjectDetailPage({
@@ -18,18 +30,21 @@ export default function ProjectDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const [id, setId] = useState<string | null>(null);
-  if (id === null) {
-    params.then((p) => setId(p.id));
-    return <div className="text-muted-foreground">Loading...</div>;
-  }
+  const { id } = React.use(params);
   return <ProjectDetail id={id} />;
 }
 
 function ProjectDetail({ id }: { id: string }) {
-  const [showBoqForm, setShowBoqForm] = useState(false);
-  const [showProgressForm, setShowProgressForm] = useState(false);
+  const router = useRouter();
   const queryClient = useQueryClient();
+  const [boqDialog, setBoqDialog] = React.useState<{
+    open: boolean;
+    item?: BoqItem;
+  }>({ open: false });
+  const [progressDialog, setProgressDialog] = React.useState<{
+    open: boolean;
+    record?: ProgressRecord;
+  }>({ open: false });
 
   const { data: project, isLoading } = useQuery({
     queryKey: ['project', id],
@@ -41,7 +56,7 @@ function ProjectDetail({ id }: { id: string }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      window.location.href = '/projects';
+      router.push('/projects');
     },
   });
 
@@ -160,14 +175,14 @@ function ProjectDetail({ id }: { id: string }) {
       <BoqSection
         projectId={id}
         items={project.boqItems}
-        showForm={showBoqForm}
-        setShowForm={setShowBoqForm}
+        onEdit={(item) => setBoqDialog({ open: true, item })}
+        onAdd={() => setBoqDialog({ open: true })}
       />
       <ProgressSection
         projectId={id}
         records={project.progressRecords}
-        showForm={showProgressForm}
-        setShowForm={setShowProgressForm}
+        onEdit={(record) => setProgressDialog({ open: true, record })}
+        onAdd={() => setProgressDialog({ open: true })}
       />
 
       {project.inventoryTransactions.length > 0 && (
@@ -207,6 +222,44 @@ function ProjectDetail({ id }: { id: string }) {
           </CardContent>
         </Card>
       )}
+
+      <Dialog
+        open={boqDialog.open}
+        onOpenChange={(open) => setBoqDialog({ open })}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {boqDialog.item ? 'Edit BOQ Item' : 'Add BOQ Item'}
+            </DialogTitle>
+          </DialogHeader>
+          <BoqForm
+            projectId={id}
+            item={boqDialog.item}
+            onSuccess={() => setBoqDialog({ open: false })}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={progressDialog.open}
+        onOpenChange={(open) => setProgressDialog({ open })}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {progressDialog.record
+                ? 'Edit Progress Record'
+                : 'Add Progress Record'}
+            </DialogTitle>
+          </DialogHeader>
+          <ProgressForm
+            projectId={id}
+            record={progressDialog.record}
+            onSuccess={() => setProgressDialog({ open: false })}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -214,34 +267,23 @@ function ProjectDetail({ id }: { id: string }) {
 function BoqSection({
   projectId,
   items,
-  showForm,
-  setShowForm,
+  onAdd,
+  onEdit,
 }: {
   projectId: string;
   items: BoqItem[];
-  showForm: boolean;
-  setShowForm: (v: boolean) => void;
+  onAdd: () => void;
+  onEdit: (item: BoqItem) => void;
 }) {
   const queryClient = useQueryClient();
-
-  const createMutation = useMutation({
-    mutationFn: (data: {
-      description: string;
-      unit: string;
-      quantity: number;
-      unitPrice: number;
-    }) => api.post(`/projects/${projectId}/boq`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['project', projectId] });
-      setShowForm(false);
-    },
-  });
 
   const deleteMutation = useMutation({
     mutationFn: (itemId: string) =>
       api.delete(`/projects/${projectId}/boq/${itemId}`),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ['project', projectId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['project', projectId] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    },
   });
 
   return (
@@ -249,70 +291,12 @@ function BoqSection({
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>BOQ Items</CardTitle>
-          <Button size="sm" onClick={() => setShowForm(!showForm)}>
-            {showForm ? 'Cancel' : 'Add BOQ Item'}
+          <Button size="sm" onClick={onAdd}>
+            Add BOQ Item
           </Button>
         </div>
       </CardHeader>
       <CardContent>
-        {showForm && (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              const fd = new FormData(e.currentTarget);
-              createMutation.mutate({
-                description: fd.get('description') as string,
-                unit: fd.get('unit') as string,
-                quantity: Number(fd.get('quantity')),
-                unitPrice: Number(fd.get('unitPrice')),
-              });
-            }}
-            className="mb-4 grid gap-3 rounded-lg border p-4 md:grid-cols-4"
-          >
-            <div className="space-y-1 md:col-span-2">
-              <Label htmlFor="description">Description</Label>
-              <Input id="description" name="description" required />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="unit">Unit</Label>
-              <Input id="unit" name="unit" required />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="quantity">Quantity</Label>
-              <Input
-                id="quantity"
-                name="quantity"
-                type="number"
-                step="0.01"
-                required
-              />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="unitPrice">Unit Price</Label>
-              <Input
-                id="unitPrice"
-                name="unitPrice"
-                type="number"
-                step="0.01"
-                required
-              />
-            </div>
-            <Button
-              type="submit"
-              size="sm"
-              disabled={createMutation.isPending}
-              className="md:col-span-4"
-            >
-              {createMutation.isPending ? 'Adding...' : 'Add Item'}
-            </Button>
-            {createMutation.isError && (
-              <p className="text-xs text-destructive md:col-span-4">
-                {createMutation.error?.message}
-              </p>
-            )}
-          </form>
-        )}
-
         {items.length === 0 ? (
           <p className="text-sm text-muted-foreground">No BOQ items yet.</p>
         ) : (
@@ -340,13 +324,25 @@ function BoqSection({
                     {formatCurrency(Number(item.total))}
                   </td>
                   <td className="p-3">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => deleteMutation.mutate(item.id)}
-                    >
-                      Delete
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onEdit(item)}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          if (confirm('Delete this BOQ item?'))
+                            deleteMutation.mutate(item.id);
+                        }}
+                      >
+                        Delete
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -374,30 +370,15 @@ function BoqSection({
 function ProgressSection({
   projectId,
   records,
-  showForm,
-  setShowForm,
+  onAdd,
+  onEdit,
 }: {
   projectId: string;
   records: ProgressRecord[];
-  showForm: boolean;
-  setShowForm: (v: boolean) => void;
+  onAdd: () => void;
+  onEdit: (record: ProgressRecord) => void;
 }) {
   const queryClient = useQueryClient();
-
-  const createMutation = useMutation({
-    mutationFn: (data: {
-      date: string;
-      description: string;
-      progressPercent: number;
-      notes?: string;
-    }) => api.post(`/projects/${projectId}/progress`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['project', projectId] });
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      setShowForm(false);
-    },
-  });
 
   const deleteMutation = useMutation({
     mutationFn: (recordId: string) =>
@@ -414,62 +395,12 @@ function ProgressSection({
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Progress Records</CardTitle>
-          <Button size="sm" onClick={() => setShowForm(!showForm)}>
-            {showForm ? 'Cancel' : 'Add Progress'}
+          <Button size="sm" onClick={onAdd}>
+            Add Progress
           </Button>
         </div>
       </CardHeader>
       <CardContent>
-        {showForm && (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              const fd = new FormData(e.currentTarget);
-              createMutation.mutate({
-                date: fd.get('date') as string,
-                description: fd.get('description') as string,
-                progressPercent: Number(fd.get('progressPercent')),
-                notes: (fd.get('notes') as string) || undefined,
-              });
-            }}
-            className="mb-4 space-y-3 rounded-lg border p-4"
-          >
-            <div className="grid gap-3 md:grid-cols-3">
-              <div className="space-y-1">
-                <Label htmlFor="date">Date</Label>
-                <Input id="date" name="date" type="date" required />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="progressPercent">Progress %</Label>
-                <Input
-                  id="progressPercent"
-                  name="progressPercent"
-                  type="number"
-                  min="0"
-                  max="100"
-                  required
-                />
-              </div>
-              <div className="space-y-1 md:col-span-1">
-                <Label htmlFor="description">Description</Label>
-                <Input id="description" name="description" required />
-              </div>
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="notes">Notes</Label>
-              <Input id="notes" name="notes" />
-            </div>
-            <Button type="submit" size="sm" disabled={createMutation.isPending}>
-              {createMutation.isPending ? 'Adding...' : 'Add Record'}
-            </Button>
-            {createMutation.isError && (
-              <p className="text-xs text-destructive">
-                {createMutation.error?.message}
-              </p>
-            )}
-          </form>
-        )}
-
         {records.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             No progress records yet.
@@ -490,16 +421,24 @@ function ProgressSection({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => deleteMutation.mutate(r.id)}
+                      onClick={() => onEdit(r)}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        if (confirm('Delete this progress record?'))
+                          deleteMutation.mutate(r.id);
+                      }}
                     >
                       Delete
                     </Button>
                   </div>
                 </div>
                 {r.notes && (
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    {r.notes}
-                  </p>
+                  <p className="mt-2 text-sm text-muted-foreground">{r.notes}</p>
                 )}
               </div>
             ))}

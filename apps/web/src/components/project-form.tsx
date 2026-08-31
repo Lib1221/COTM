@@ -10,6 +10,7 @@ import type { Project } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select } from '@/components/ui/select';
 
 const projectSchema = z.object({
   name: z.string().min(1, 'Name is required').max(200),
@@ -142,15 +143,11 @@ export function ProjectForm({ project }: { project?: Project }) {
         </div>
         <div className="space-y-2">
           <Label htmlFor="status">Status</Label>
-          <select
-            id="status"
-            {...register('status')}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          >
+          <Select id="status" {...register('status')}>
             <option value="PLANNED">Planned</option>
             <option value="ONGOING">Ongoing</option>
             <option value="COMPLETED">Completed</option>
-          </select>
+          </Select>
         </div>
       </div>
 
