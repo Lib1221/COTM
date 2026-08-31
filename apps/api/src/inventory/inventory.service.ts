@@ -116,14 +116,24 @@ export class InventoryService {
     if (!project)
       throw new NotFoundException(`Project ${dto.projectId} not found`);
 
-    const available = Number(material.currentStock);
-    if (dto.quantity > available) {
-      throw new BadRequestException(
-        `Stock out quantity (${dto.quantity}) exceeds available stock (${available}) for material "${material.name}"`,
-      );
-    }
-
     return this.prisma.$transaction(async (tx) => {
+      // Atomic conditional decrement: only succeeds while enough stock exists,
+      // preventing a TOCTOU race between the availability check and the update.
+      const result = await tx.material.updateMany({
+        where: { id: dto.materialId, currentStock: { gte: dto.quantity } },
+        data: { currentStock: { decrement: dto.quantity } },
+      });
+      if (result.count === 0) {
+        const current = await tx.material.findUnique({
+          where: { id: dto.materialId },
+          select: { currentStock: true },
+        });
+        const available = Number(current?.currentStock ?? 0);
+        throw new BadRequestException(
+          `Stock out quantity (${dto.quantity}) exceeds available stock (${available}) for material "${material.name}"`,
+        );
+      }
+
       const transaction = await tx.inventoryTransaction.create({
         data: {
           materialId: dto.materialId,
@@ -138,17 +148,13 @@ export class InventoryService {
           project: { select: { id: true, name: true, code: true } },
         },
       });
-      const updated = await tx.material.update({
-        where: { id: dto.materialId },
-        data: { currentStock: { decrement: dto.quantity } },
-      });
       return {
         ...transaction,
         material: {
           ...transaction.material,
-          currentStock: updated.currentStock,
           isLowStock:
-            Number(updated.currentStock) <= Number(updated.minimumStock),
+            Number(transaction.material.currentStock) <=
+            Number(transaction.material.minimumStock),
         },
       };
     });

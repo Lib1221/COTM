@@ -36,14 +36,18 @@ export class ProgressController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a progress record' })
-  update(@Param('id') id: string, @Body() dto: UpdateProgressDto) {
-    return this.service.update(id, dto);
+  update(
+    @Param('projectId') projectId: string,
+    @Param('id') id: string,
+    @Body() dto: UpdateProgressDto,
+  ) {
+    return this.service.update(projectId, id, dto);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete a progress record' })
-  remove(@Param('id') id: string) {
-    return this.service.remove(id);
+  remove(@Param('projectId') projectId: string, @Param('id') id: string) {
+    return this.service.remove(projectId, id);
   }
 }

@@ -32,11 +32,11 @@ export class ProgressService {
     });
   }
 
-  async update(id: string, dto: UpdateProgressDto) {
+  async update(projectId: string, id: string, dto: UpdateProgressDto) {
     const existing = await this.prisma.progressRecord.findUnique({
       where: { id },
     });
-    if (!existing)
+    if (!existing || existing.projectId !== projectId)
       throw new NotFoundException(`Progress record ${id} not found`);
     return this.prisma.progressRecord.update({
       where: { id },
@@ -51,11 +51,11 @@ export class ProgressService {
     });
   }
 
-  async remove(id: string) {
+  async remove(projectId: string, id: string) {
     const existing = await this.prisma.progressRecord.findUnique({
       where: { id },
     });
-    if (!existing)
+    if (!existing || existing.projectId !== projectId)
       throw new NotFoundException(`Progress record ${id} not found`);
     await this.prisma.progressRecord.delete({ where: { id } });
     return { id };

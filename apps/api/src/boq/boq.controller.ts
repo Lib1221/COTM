@@ -33,14 +33,18 @@ export class BoqController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a BOQ item' })
-  update(@Param('id') id: string, @Body() dto: UpdateBoqItemDto) {
-    return this.service.update(id, dto);
+  update(
+    @Param('projectId') projectId: string,
+    @Param('id') id: string,
+    @Body() dto: UpdateBoqItemDto,
+  ) {
+    return this.service.update(projectId, id, dto);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete a BOQ item' })
-  remove(@Param('id') id: string) {
-    return this.service.remove(id);
+  remove(@Param('projectId') projectId: string, @Param('id') id: string) {
+    return this.service.remove(projectId, id);
   }
 }

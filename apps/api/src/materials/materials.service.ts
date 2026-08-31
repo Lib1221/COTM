@@ -142,17 +142,24 @@ export class MaterialsService {
       if (dup && dup.id !== id)
         throw new ConflictException(`Material code ${dto.code} already exists`);
     }
-    return this.prisma.material.update({
+    const updated = await this.prisma.material.update({
       where: { id },
       data: {
         ...(dto.name !== undefined && { name: dto.name }),
         ...(dto.code !== undefined && { code: dto.code }),
         ...(dto.unit !== undefined && { unit: dto.unit }),
+        ...(dto.currentStock !== undefined && {
+          currentStock: dto.currentStock,
+        }),
         ...(dto.minimumStock !== undefined && {
           minimumStock: dto.minimumStock,
         }),
       },
     });
+    return {
+      ...updated,
+      isLowStock: Number(updated.currentStock) <= Number(updated.minimumStock),
+    };
   }
 
   async remove(id: string) {

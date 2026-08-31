@@ -35,9 +35,10 @@ export class BoqService {
     });
   }
 
-  async update(id: string, dto: UpdateBoqItemDto) {
+  async update(projectId: string, id: string, dto: UpdateBoqItemDto) {
     const existing = await this.prisma.boqItem.findUnique({ where: { id } });
-    if (!existing) throw new NotFoundException(`BOQ item ${id} not found`);
+    if (!existing || existing.projectId !== projectId)
+      throw new NotFoundException(`BOQ item ${id} not found`);
     const quantity = dto.quantity ?? Number(existing.quantity);
     const unitPrice = dto.unitPrice ?? Number(existing.unitPrice);
     return this.prisma.boqItem.update({
@@ -52,9 +53,10 @@ export class BoqService {
     });
   }
 
-  async remove(id: string) {
+  async remove(projectId: string, id: string) {
     const existing = await this.prisma.boqItem.findUnique({ where: { id } });
-    if (!existing) throw new NotFoundException(`BOQ item ${id} not found`);
+    if (!existing || existing.projectId !== projectId)
+      throw new NotFoundException(`BOQ item ${id} not found`);
     await this.prisma.boqItem.delete({ where: { id } });
     return { id };
   }
