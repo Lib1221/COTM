@@ -21,7 +21,7 @@ const materialSchema = z.object({
 
 type MaterialFormValues = z.infer<typeof materialSchema>;
 
-export function MaterialForm() {
+export function MaterialForm({ material }: { material?: Material }) {
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -31,14 +31,27 @@ export function MaterialForm() {
     formState: { errors },
   } = useForm<MaterialFormValues>({
     resolver: zodResolver(materialSchema),
-    defaultValues: { currentStock: 0, minimumStock: 0 },
+    defaultValues: material
+      ? {
+          name: material.name,
+          code: material.code,
+          unit: material.unit,
+          currentStock: Number(material.currentStock),
+          minimumStock: Number(material.minimumStock),
+        }
+      : { currentStock: 0, minimumStock: 0 },
   });
 
   const mutation = useMutation({
-    mutationFn: (data: MaterialFormValues) =>
-      api.post<Material>('/materials', data),
+    mutationFn: (data: MaterialFormValues) => {
+      if (material) {
+        return api.patch<Material>(`/materials/${material.id}`, data);
+      }
+      return api.post<Material>('/materials', data);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['materials'] });
+      queryClient.invalidateQueries({ queryKey: ['materials-all'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       router.push('/materials');
       router.refresh();
@@ -103,7 +116,11 @@ export function MaterialForm() {
 
       <div className="flex gap-2">
         <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending ? 'Saving...' : 'Create Material'}
+          {mutation.isPending
+            ? 'Saving...'
+            : material
+              ? 'Update Material'
+              : 'Create Material'}
         </Button>
         <Button type="button" variant="outline" onClick={() => router.back()}>
           Cancel

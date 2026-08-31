@@ -6,7 +6,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   useReactTable,
   getCoreRowModel,
-  getSortedRowModel,
   flexRender,
   createColumnHelper,
   type SortingState,
@@ -34,6 +33,11 @@ export default function MaterialsPage() {
         pageSize: String(pageSize),
       });
       if (search) params.set('search', search);
+      const sort = sorting[0];
+      if (sort) {
+        params.set('sortBy', sort.id);
+        params.set('sortOrder', sort.desc ? 'desc' : 'asc');
+      }
       return api.get<PaginatedResponse<Material>>(`/materials?${params}`);
     },
   });
@@ -42,6 +46,7 @@ export default function MaterialsPage() {
     mutationFn: (id: string) => api.delete(`/materials/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['materials'] });
+      queryClient.invalidateQueries({ queryKey: ['materials-all'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
@@ -84,13 +89,23 @@ export default function MaterialsPage() {
         id: 'actions',
         header: '',
         cell: (i) => (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => deleteMutation.mutate(i.row.original.id)}
-          >
-            Delete
-          </Button>
+          <div className="flex gap-1">
+            <Link href={`/materials/${i.row.original.id}/edit`}>
+              <Button variant="ghost" size="sm">
+                Edit
+              </Button>
+            </Link>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                if (confirm(`Delete material "${i.row.original.name}"?`))
+                  deleteMutation.mutate(i.row.original.id);
+              }}
+            >
+              Delete
+            </Button>
+          </div>
         ),
       }),
     ],
@@ -98,8 +113,8 @@ export default function MaterialsPage() {
     onSortingChange: setSorting,
     onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
     manualPagination: true,
+    manualSorting: true,
     pageCount: data?.meta.totalPages ?? -1,
   });
 
