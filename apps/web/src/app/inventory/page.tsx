@@ -5,7 +5,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   useReactTable,
   getCoreRowModel,
-  flexRender,
   createColumnHelper,
   type SortingState,
 } from '@tanstack/react-table';
@@ -13,6 +12,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { api } from '@/lib/api';
+import { useDebouncedValue } from '@/lib/use-debounce';
 import type {
   InventoryTransaction,
   Material,
@@ -25,11 +25,12 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { DataTable, TablePagination } from '@/components/data-table';
 import { formatDate } from '@/lib/utils';
 
 const stockInSchema = z.object({
   materialId: z.string().min(1, 'Material is required'),
-  quantity: z.coerce.number().min(0.001, 'Quantity must be positive'),
+  quantity: z.coerce.number().positive('Quantity must be greater than 0'),
   date: z.string().min(1, 'Date is required'),
   reference: z.string().max(200).optional(),
 });
@@ -38,30 +39,78 @@ type StockInValues = z.infer<typeof stockInSchema>;
 const stockOutSchema = z.object({
   materialId: z.string().min(1, 'Material is required'),
   projectId: z.string().min(1, 'Project is required'),
-  quantity: z.coerce.number().min(0.001, 'Quantity must be positive'),
+  quantity: z.coerce.number().positive('Quantity must be greater than 0'),
   date: z.string().min(1, 'Date is required'),
   reference: z.string().max(200).optional(),
 });
 type StockOutValues = z.infer<typeof stockOutSchema>;
 
+const columnHelper = createColumnHelper<InventoryTransaction>();
+
+const columns = [
+  columnHelper.accessor('date', {
+    header: 'Date',
+    cell: (i) => formatDate(i.getValue()),
+  }),
+  columnHelper.accessor('type', {
+    header: 'Type',
+    cell: (i) =>
+      i.getValue() === 'STOCK_IN' ? (
+        <Badge variant="success">Stock In</Badge>
+      ) : (
+        <Badge variant="warning">Stock Out</Badge>
+      ),
+  }),
+  columnHelper.accessor('material', {
+    id: 'material',
+    header: 'Material',
+    cell: (i) => i.row.original.material?.name ?? '-',
+  }),
+  columnHelper.accessor('project', {
+    id: 'project',
+    header: 'Project',
+    cell: (i) => i.row.original.project?.name ?? '-',
+  }),
+  columnHelper.accessor('quantity', {
+    header: 'Quantity',
+    cell: (i) => `${i.getValue()} ${i.row.original.material?.unit ?? ''}`,
+  }),
+  columnHelper.accessor('reference', {
+    header: 'Reference',
+    enableSorting: false,
+    cell: (i) => i.getValue() ?? '-',
+  }),
+];
+
 export default function InventoryPage() {
   const [showStockIn, setShowStockIn] = useState(false);
   const [showStockOut, setShowStockOut] = useState(false);
   const [search, setSearch] = useState('');
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const debouncedSearch = useDebouncedValue(search);
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: 'date', desc: true },
+  ]);
   const [{ pageIndex, pageSize }, setPagination] = useState({
     pageIndex: 0,
     pageSize: 10,
   });
 
-  const { data: txData, isLoading } = useQuery({
-    queryKey: ['inventory', { search, sorting, pageIndex, pageSize }],
+  const {
+    data: txData,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: [
+      'inventory',
+      { search: debouncedSearch, sorting, pageIndex, pageSize },
+    ],
     queryFn: () => {
       const params = new URLSearchParams({
         page: String(pageIndex + 1),
         pageSize: String(pageSize),
       });
-      if (search) params.set('search', search);
+      if (debouncedSearch) params.set('search', debouncedSearch);
       const sort = sorting[0];
       if (sort) {
         params.set('sortBy', sort.id);
@@ -85,43 +134,9 @@ export default function InventoryPage() {
       api.get<PaginatedResponse<Project>>('/projects?pageSize=100'),
   });
 
-  const columnHelper = createColumnHelper<InventoryTransaction>();
-
   const table = useReactTable({
     data: txData?.data ?? [],
-    columns: [
-      columnHelper.accessor('date', {
-        header: 'Date',
-        cell: (i) => formatDate(i.getValue()),
-      }),
-      columnHelper.accessor('type', {
-        header: 'Type',
-        cell: (i) =>
-          i.getValue() === 'STOCK_IN' ? (
-            <Badge variant="success">Stock In</Badge>
-          ) : (
-            <Badge variant="warning">Stock Out</Badge>
-          ),
-      }),
-      columnHelper.accessor('material', {
-        id: 'material',
-        header: 'Material',
-        cell: (i) => i.row.original.material?.name ?? '-',
-      }),
-      columnHelper.accessor('project', {
-        id: 'project',
-        header: 'Project',
-        cell: (i) => i.row.original.project?.name ?? '-',
-      }),
-      columnHelper.accessor('quantity', {
-        header: 'Quantity',
-        cell: (i) => `${i.getValue()} ${i.row.original.material?.unit ?? ''}`,
-      }),
-      columnHelper.accessor('reference', {
-        header: 'Reference',
-        cell: (i) => i.getValue() ?? '-',
-      }),
-    ],
+    columns,
     state: { sorting, pagination: { pageIndex, pageSize } },
     onSortingChange: setSorting,
     onPaginationChange: setPagination,
@@ -185,84 +200,22 @@ export default function InventoryPage() {
             />
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="rounded-lg border">
-            <table className="w-full text-sm">
-              <thead className="border-b bg-muted/50">
-                {table.getHeaderGroups().map((hg) => (
-                  <tr key={hg.id}>
-                    {hg.headers.map((header) => (
-                      <th
-                        key={header.id}
-                        className="cursor-pointer p-3 text-left font-medium text-muted-foreground"
-                        onClick={header.column.getToggleSortingHandler()}
-                      >
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                        {header.column.getIsSorted() === 'asc' && ' ↑'}
-                        {header.column.getIsSorted() === 'desc' && ' ↓'}
-                      </th>
-                    ))}
-                  </tr>
-                ))}
-              </thead>
-              <tbody>
-                {isLoading ? (
-                  <tr>
-                    <td className="p-6 text-center text-muted-foreground">
-                      Loading...
-                    </td>
-                  </tr>
-                ) : table.getRowModel().rows.length === 0 ? (
-                  <tr>
-                    <td className="p-6 text-center text-muted-foreground">
-                      No transactions found.
-                    </td>
-                  </tr>
-                ) : (
-                  table.getRowModel().rows.map((row) => (
-                    <tr
-                      key={row.id}
-                      className="border-b last:border-0 hover:bg-muted/30"
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <td key={cell.id} className="p-3">
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext(),
-                          )}
-                        </td>
-                      ))}
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="mt-4 flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.previousPage()}
-              disabled={pageIndex === 0}
-            >
-              Previous
-            </Button>
-            <span className="text-sm text-muted-foreground">
-              Page {pageIndex + 1} of {txData?.meta.totalPages ?? 1}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.nextPage()}
-              disabled={pageIndex >= (txData?.meta.totalPages ?? 1) - 1}
-            >
-              Next
-            </Button>
-          </div>
+        <CardContent className="space-y-4">
+          <DataTable
+            table={table}
+            columnCount={columns.length}
+            isLoading={isLoading}
+            isError={isError}
+            errorMessage={error?.message ?? 'Failed to load transactions.'}
+            emptyMessage="No transactions found."
+          />
+          <TablePagination
+            pageIndex={pageIndex}
+            totalPages={txData?.meta.totalPages ?? 1}
+            total={txData?.meta.total}
+            onPrevious={() => table.previousPage()}
+            onNext={() => table.nextPage()}
+          />
         </CardContent>
       </Card>
     </div>

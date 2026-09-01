@@ -6,18 +6,17 @@ import { useQuery } from '@tanstack/react-query';
 import {
   useReactTable,
   getCoreRowModel,
-  getSortedRowModel,
-  getPaginationRowModel,
-  flexRender,
   createColumnHelper,
   type SortingState,
 } from '@tanstack/react-table';
 import { api } from '@/lib/api';
+import { useDebouncedValue } from '@/lib/use-debounce';
 import type { Project, PaginatedResponse, ProjectStatus } from '@/lib/types';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { StatusBadge } from '@/components/status-badge';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { DataTable, TablePagination } from '@/components/data-table';
+import { formatCurrency, formatDate, cn } from '@/lib/utils';
 
 const columnHelper = createColumnHelper<Project>();
 
@@ -36,10 +35,11 @@ const columns = [
   }),
   columnHelper.accessor('budget', {
     header: 'Budget',
-    cell: (info) => formatCurrency(info.getValue()),
+    cell: (info) => formatCurrency(Number(info.getValue())),
   }),
   columnHelper.accessor('latestProgress', {
     header: 'Progress',
+    enableSorting: false,
     cell: (info) => `${info.getValue() ?? 0}%`,
   }),
   columnHelper.accessor('status', {
@@ -53,11 +53,13 @@ const columns = [
   columnHelper.display({
     id: 'actions',
     header: '',
+    enableSorting: false,
     cell: (info) => (
-      <Link href={`/projects/${info.row.original.id}`}>
-        <Button variant="outline" size="sm">
-          View
-        </Button>
+      <Link
+        href={`/projects/${info.row.original.id}`}
+        className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
+      >
+        View
       </Link>
     ),
   }),
@@ -65,6 +67,7 @@ const columns = [
 
 export default function ProjectsPage() {
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search);
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'createdAt', desc: true },
   ]);
@@ -73,8 +76,11 @@ export default function ProjectsPage() {
     pageSize: 10,
   });
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['projects', { search, sorting, pageIndex, pageSize }],
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: [
+      'projects',
+      { search: debouncedSearch, sorting, pageIndex, pageSize },
+    ],
     queryFn: () => {
       const params = new URLSearchParams({
         page: String(pageIndex + 1),
@@ -82,7 +88,7 @@ export default function ProjectsPage() {
         sortBy: sorting[0]?.id ?? 'createdAt',
         sortOrder: sorting[0]?.desc ? 'desc' : 'asc',
       });
-      if (search) params.set('search', search);
+      if (debouncedSearch) params.set('search', debouncedSearch);
       return api.get<PaginatedResponse<Project>>(`/projects?${params}`);
     },
   });
@@ -94,8 +100,6 @@ export default function ProjectsPage() {
     onSortingChange: setSorting,
     onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     manualPagination: true,
     manualSorting: true,
     pageCount: data?.meta.totalPages ?? -1,
@@ -105,8 +109,11 @@ export default function ProjectsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Projects</h1>
-        <Link href="/projects/new">
-          <Button>New Project</Button>
+        <Link
+          href="/projects/new"
+          className={cn(buttonVariants({ variant: 'default' }))}
+        >
+          New Project
         </Link>
       </div>
 
@@ -120,92 +127,22 @@ export default function ProjectsPage() {
         className="max-w-sm"
       />
 
-      <div className="rounded-lg border">
-        <table className="w-full text-sm">
-          <thead className="border-b bg-muted/50">
-            {table.getHeaderGroups().map((hg) => (
-              <tr key={hg.id}>
-                {hg.headers.map((header) => (
-                  <th
-                    key={header.id}
-                    className="cursor-pointer p-3 text-left font-medium text-muted-foreground"
-                    onClick={header.column.getToggleSortingHandler()}
-                  >
-                    {flexRender(
-                      header.column.columnDef.header,
-                      header.getContext(),
-                    )}
-                    {header.column.getIsSorted() === 'asc' && ' ↑'}
-                    {header.column.getIsSorted() === 'desc' && ' ↓'}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {isLoading ? (
-              <tr>
-                <td
-                  colSpan={columns.length}
-                  className="p-6 text-center text-muted-foreground"
-                >
-                  Loading...
-                </td>
-              </tr>
-            ) : table.getRowModel().rows.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={columns.length}
-                  className="p-6 text-center text-muted-foreground"
-                >
-                  No projects found.
-                </td>
-              </tr>
-            ) : (
-              table.getRowModel().rows.map((row) => (
-                <tr
-                  key={row.id}
-                  className="border-b last:border-0 hover:bg-muted/30"
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="p-3">
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </td>
-                  ))}
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+      <DataTable
+        table={table}
+        columnCount={columns.length}
+        isLoading={isLoading}
+        isError={isError}
+        errorMessage={error?.message ?? 'Failed to load projects.'}
+        emptyMessage="No projects found."
+      />
 
-      <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.previousPage()}
-          disabled={pageIndex === 0}
-        >
-          Previous
-        </Button>
-        <span className="text-sm text-muted-foreground">
-          Page {pageIndex + 1} of {data?.meta.totalPages ?? 1}
-        </span>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.nextPage()}
-          disabled={pageIndex >= (data?.meta.totalPages ?? 1) - 1}
-        >
-          Next
-        </Button>
-        <span className="ml-4 text-sm text-muted-foreground">
-          {data?.meta.total ?? 0} total
-        </span>
-      </div>
+      <TablePagination
+        pageIndex={pageIndex}
+        totalPages={data?.meta.totalPages ?? 1}
+        total={data?.meta.total}
+        onPrevious={() => table.previousPage()}
+        onNext={() => table.nextPage()}
+      />
     </div>
   );
 }

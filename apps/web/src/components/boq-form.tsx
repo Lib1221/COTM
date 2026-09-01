@@ -13,8 +13,8 @@ import { Label } from '@/components/ui/label';
 const boqSchema = z.object({
   description: z.string().min(1, 'Description is required').max(500),
   unit: z.string().min(1, 'Unit is required').max(20),
-  quantity: z.coerce.number().min(0, 'Quantity must be positive'),
-  unitPrice: z.coerce.number().min(0, 'Unit price must be positive'),
+  quantity: z.coerce.number().min(0, 'Quantity must be 0 or greater'),
+  unitPrice: z.coerce.number().min(0, 'Unit price must be 0 or greater'),
 });
 
 type BoqFormValues = z.infer<typeof boqSchema>;
@@ -124,11 +124,7 @@ export function BoqForm({
 
       <div className="flex justify-end gap-2 pt-2">
         <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending
-            ? 'Saving...'
-            : item
-              ? 'Update Item'
-              : 'Add Item'}
+          {mutation.isPending ? 'Saving...' : item ? 'Update Item' : 'Add Item'}
         </Button>
       </div>
     </form>

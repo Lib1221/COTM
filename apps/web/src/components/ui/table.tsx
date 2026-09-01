@@ -46,7 +46,7 @@ export function TableRow({
 export function TableHead({
   className,
   ...props
-}: React.HTMLAttributes<HTMLTableCellElement>) {
+}: React.ThHTMLAttributes<HTMLTableCellElement>) {
   return (
     <th
       className={cn(
@@ -61,7 +61,7 @@ export function TableHead({
 export function TableCell({
   className,
   ...props
-}: React.HTMLAttributes<HTMLTableCellElement>) {
+}: React.TdHTMLAttributes<HTMLTableCellElement>) {
   return (
     <td
       className={cn(

@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import Link from 'next/link';
 import { api } from '@/lib/api';
 import type { Dashboard } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,13 +9,19 @@ import { StatusBadge } from '@/components/status-badge';
 import { formatCurrency } from '@/lib/utils';
 
 export default function DashboardPage() {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ['dashboard'],
     queryFn: () => api.get<Dashboard>('/dashboard'),
   });
 
   if (isLoading) return <div className="text-muted-foreground">Loading...</div>;
-  if (!data) return <div className="text-muted-foreground">No data</div>;
+  if (isError || !data) {
+    return (
+      <div className="text-destructive">
+        {error?.message ?? 'Failed to load dashboard.'}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -107,27 +114,45 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {data.projectPerformance.map((p) => (
-                  <tr key={p.id} className="border-b last:border-0">
-                    <td className="p-3">{p.name}</td>
-                    <td className="p-3">{formatCurrency(p.budget)}</td>
-                    <td className="p-3">{formatCurrency(p.boqValue)}</td>
-                    <td className="p-3">
-                      <div className="flex items-center gap-2">
-                        <div className="h-2 w-20 rounded-full bg-muted">
-                          <div
-                            className="h-2 rounded-full bg-primary"
-                            style={{ width: `${p.progressPercent}%` }}
-                          />
-                        </div>
-                        <span className="text-xs">{p.progressPercent}%</span>
-                      </div>
-                    </td>
-                    <td className="p-3">
-                      <StatusBadge status={p.status} />
+                {data.projectPerformance.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      className="p-6 text-center text-muted-foreground"
+                    >
+                      No projects yet.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  data.projectPerformance.map((p) => (
+                    <tr key={p.id} className="border-b last:border-0">
+                      <td className="p-3">
+                        <Link
+                          href={`/projects/${p.id}`}
+                          className="font-medium hover:underline"
+                        >
+                          {p.name}
+                        </Link>
+                      </td>
+                      <td className="p-3">{formatCurrency(p.budget)}</td>
+                      <td className="p-3">{formatCurrency(p.boqValue)}</td>
+                      <td className="p-3">
+                        <div className="flex items-center gap-2">
+                          <div className="h-2 w-20 rounded-full bg-muted">
+                            <div
+                              className="h-2 rounded-full bg-primary"
+                              style={{ width: `${p.progressPercent}%` }}
+                            />
+                          </div>
+                          <span className="text-xs">{p.progressPercent}%</span>
+                        </div>
+                      </td>
+                      <td className="p-3">
+                        <StatusBadge status={p.status} />
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

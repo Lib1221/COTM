@@ -4,17 +4,22 @@ import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  useReactTable,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getSortedRowModel,
+  getPaginationRowModel,
+  createColumnHelper,
+  type SortingState,
+} from '@tanstack/react-table';
 import { api } from '@/lib/api';
 import type { ProjectDetail, BoqItem, ProgressRecord } from '@/lib/types';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { StatusBadge } from '@/components/status-badge';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -23,7 +28,8 @@ import {
 } from '@/components/ui/dialog';
 import { BoqForm } from '@/components/boq-form';
 import { ProgressForm } from '@/components/progress-form';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { DataTable, TablePagination } from '@/components/data-table';
+import { cn, formatCurrency, formatDate } from '@/lib/utils';
 
 export default function ProjectDetailPage({
   params,
@@ -45,8 +51,14 @@ function ProjectDetail({ id }: { id: string }) {
     open: boolean;
     record?: ProgressRecord;
   }>({ open: false });
+  const [actionError, setActionError] = React.useState<string | null>(null);
 
-  const { data: project, isLoading } = useQuery({
+  const {
+    data: project,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
     queryKey: ['project', id],
     queryFn: () => api.get<ProjectDetail>(`/projects/${id}`),
   });
@@ -58,98 +70,68 @@ function ProjectDetail({ id }: { id: string }) {
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       router.push('/projects');
     },
+    onError: (err: Error) => setActionError(err.message),
   });
 
   if (isLoading) return <div className="text-muted-foreground">Loading...</div>;
+  if (isError) {
+    return (
+      <div className="text-destructive">
+        {error?.message ?? 'Failed to load project.'}
+      </div>
+    );
+  }
   if (!project)
     return <div className="text-muted-foreground">Project not found</div>;
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <Link href="/projects">
-            <Button variant="ghost" size="sm">
-              ← Back
-            </Button>
+          <Link
+            href="/projects"
+            className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}
+          >
+            ← Back
           </Link>
           <h1 className="text-2xl font-bold">{project.name}</h1>
           <StatusBadge status={project.status} />
         </div>
         <div className="flex gap-2">
-          <Link href={`/projects/${id}/edit`}>
-            <Button variant="outline" size="sm">
-              Edit
-            </Button>
+          <Link
+            href={`/projects/${id}/edit`}
+            className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
+          >
+            Edit
           </Link>
           <Button
             variant="destructive"
             size="sm"
+            disabled={deleteMutation.isPending}
             onClick={() => {
               if (confirm(`Delete project "${project.name}"?`))
                 deleteMutation.mutate();
             }}
           >
-            Delete
+            {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
           </Button>
         </div>
       </div>
 
+      {actionError && <p className="text-sm text-destructive">{actionError}</p>}
+
       <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm text-muted-foreground">
-              Code
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-lg font-semibold">{project.code}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm text-muted-foreground">
-              Client
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-lg font-semibold">{project.clientName}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm text-muted-foreground">
-              Location
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-lg font-semibold">{project.location}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm text-muted-foreground">
-              Budget
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-lg font-semibold">
-              {formatCurrency(project.budget)}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm text-muted-foreground">
-              BOQ Value
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-lg font-semibold">
-              {formatCurrency(project.boqValue)}
-            </p>
-          </CardContent>
-        </Card>
+        <InfoCard title="Code" value={project.code} />
+        <InfoCard title="Client" value={project.clientName} />
+        <InfoCard title="Location" value={project.location} />
+        <InfoCard
+          title="Budget"
+          value={formatCurrency(Number(project.budget))}
+        />
+        <InfoCard
+          title="BOQ Value"
+          value={formatCurrency(Number(project.boqValue))}
+        />
         <Card>
           <CardHeader>
             <CardTitle className="text-sm text-muted-foreground">
@@ -170,6 +152,11 @@ function ProjectDetail({ id }: { id: string }) {
             </div>
           </CardContent>
         </Card>
+        <InfoCard title="Start Date" value={formatDate(project.startDate)} />
+        <InfoCard
+          title="End Date"
+          value={project.endDate ? formatDate(project.endDate) : '—'}
+        />
       </div>
 
       <BoqSection
@@ -264,6 +251,19 @@ function ProjectDetail({ id }: { id: string }) {
   );
 }
 
+function InfoCard({ title, value }: { title: string; value: string }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-sm text-muted-foreground">{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-lg font-semibold">{value}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
 function BoqSection({
   projectId,
   items,
@@ -276,92 +276,131 @@ function BoqSection({
   onEdit: (item: BoqItem) => void;
 }) {
   const queryClient = useQueryClient();
+  const [globalFilter, setGlobalFilter] = React.useState('');
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [actionError, setActionError] = React.useState<string | null>(null);
 
   const deleteMutation = useMutation({
     mutationFn: (itemId: string) =>
       api.delete(`/projects/${projectId}/boq/${itemId}`),
     onSuccess: () => {
+      setActionError(null);
       queryClient.invalidateQueries({ queryKey: ['project', projectId] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
+    onError: (err: Error) => setActionError(err.message),
   });
+
+  const columnHelper = createColumnHelper<BoqItem>();
+  const columns = React.useMemo(
+    () => [
+      columnHelper.accessor('description', {
+        header: 'Description',
+        cell: (i) => i.getValue(),
+      }),
+      columnHelper.accessor('unit', {
+        header: 'Unit',
+        cell: (i) => i.getValue(),
+      }),
+      columnHelper.accessor('quantity', {
+        header: 'Qty',
+        cell: (i) => Number(i.getValue()),
+      }),
+      columnHelper.accessor('unitPrice', {
+        header: 'Unit Price',
+        cell: (i) => formatCurrency(Number(i.getValue())),
+      }),
+      columnHelper.accessor('total', {
+        header: 'Total',
+        cell: (i) => (
+          <span className="font-medium">
+            {formatCurrency(Number(i.getValue()))}
+          </span>
+        ),
+      }),
+      columnHelper.display({
+        id: 'actions',
+        header: '',
+        enableSorting: false,
+        cell: (i) => (
+          <div className="flex gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onEdit(i.row.original)}
+            >
+              Edit
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={deleteMutation.isPending}
+              onClick={() => {
+                if (confirm('Delete this BOQ item?'))
+                  deleteMutation.mutate(i.row.original.id);
+              }}
+            >
+              Delete
+            </Button>
+          </div>
+        ),
+      }),
+    ],
+    [columnHelper, deleteMutation, onEdit],
+  );
+
+  const table = useReactTable({
+    data: items,
+    columns,
+    state: { sorting, globalFilter },
+    onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
+    getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: { pagination: { pageSize: 10 } },
+  });
+
+  const totalValue = items.reduce((s, i) => s + Number(i.total), 0);
 
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <CardTitle>BOQ Items</CardTitle>
           <Button size="sm" onClick={onAdd}>
             Add BOQ Item
           </Button>
         </div>
       </CardHeader>
-      <CardContent>
-        {items.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No BOQ items yet.</p>
-        ) : (
-          <table className="w-full text-sm">
-            <thead className="border-b">
-              <tr className="text-left text-muted-foreground">
-                <th className="p-3 font-medium">Description</th>
-                <th className="p-3 font-medium">Unit</th>
-                <th className="p-3 font-medium">Qty</th>
-                <th className="p-3 font-medium">Unit Price</th>
-                <th className="p-3 font-medium">Total</th>
-                <th className="p-3 font-medium"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item) => (
-                <tr key={item.id} className="border-b last:border-0">
-                  <td className="p-3">{item.description}</td>
-                  <td className="p-3">{item.unit}</td>
-                  <td className="p-3">{item.quantity}</td>
-                  <td className="p-3">
-                    {formatCurrency(Number(item.unitPrice))}
-                  </td>
-                  <td className="p-3 font-medium">
-                    {formatCurrency(Number(item.total))}
-                  </td>
-                  <td className="p-3">
-                    <div className="flex gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onEdit(item)}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          if (confirm('Delete this BOQ item?'))
-                            deleteMutation.mutate(item.id);
-                        }}
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-            <tfoot className="border-t-2">
-              <tr className="font-semibold">
-                <td className="p-3" colSpan={4}>
-                  Total BOQ Value
-                </td>
-                <td className="p-3">
-                  {formatCurrency(
-                    items.reduce((s, i) => s + Number(i.total), 0),
-                  )}
-                </td>
-                <td></td>
-              </tr>
-            </tfoot>
-          </table>
+      <CardContent className="space-y-4">
+        <Input
+          placeholder="Search BOQ items..."
+          value={globalFilter}
+          onChange={(e) => setGlobalFilter(e.target.value)}
+          className="max-w-sm"
+        />
+        {actionError && (
+          <p className="text-sm text-destructive">{actionError}</p>
         )}
+        <DataTable
+          table={table}
+          columnCount={columns.length}
+          emptyMessage="No BOQ items yet."
+        />
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-semibold">
+            Total BOQ Value: {formatCurrency(totalValue)}
+          </p>
+          <TablePagination
+            pageIndex={table.getState().pagination.pageIndex}
+            totalPages={table.getPageCount() || 1}
+            total={table.getFilteredRowModel().rows.length}
+            onPrevious={() => table.previousPage()}
+            onNext={() => table.nextPage()}
+          />
+        </div>
       </CardContent>
     </Card>
   );
@@ -379,15 +418,18 @@ function ProgressSection({
   onEdit: (record: ProgressRecord) => void;
 }) {
   const queryClient = useQueryClient();
+  const [actionError, setActionError] = React.useState<string | null>(null);
 
   const deleteMutation = useMutation({
     mutationFn: (recordId: string) =>
       api.delete(`/projects/${projectId}/progress/${recordId}`),
     onSuccess: () => {
+      setActionError(null);
       queryClient.invalidateQueries({ queryKey: ['project', projectId] });
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
+    onError: (err: Error) => setActionError(err.message),
   });
 
   return (
@@ -401,6 +443,9 @@ function ProgressSection({
         </div>
       </CardHeader>
       <CardContent>
+        {actionError && (
+          <p className="mb-3 text-sm text-destructive">{actionError}</p>
+        )}
         {records.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             No progress records yet.
@@ -418,16 +463,13 @@ function ProgressSection({
                     <span className="text-xs text-muted-foreground">
                       {formatDate(r.date)}
                     </span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onEdit(r)}
-                    >
+                    <Button variant="ghost" size="sm" onClick={() => onEdit(r)}>
                       Edit
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
+                      disabled={deleteMutation.isPending}
                       onClick={() => {
                         if (confirm('Delete this progress record?'))
                           deleteMutation.mutate(r.id);
@@ -438,7 +480,9 @@ function ProgressSection({
                   </div>
                 </div>
                 {r.notes && (
-                  <p className="mt-2 text-sm text-muted-foreground">{r.notes}</p>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {r.notes}
+                  </p>
                 )}
               </div>
             ))}

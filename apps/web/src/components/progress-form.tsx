@@ -60,7 +60,10 @@ export function ProgressForm({
           payload,
         );
       }
-      return api.post<ProgressRecord>(`/projects/${projectId}/progress`, payload);
+      return api.post<ProgressRecord>(
+        `/projects/${projectId}/progress`,
+        payload,
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['project', projectId] });

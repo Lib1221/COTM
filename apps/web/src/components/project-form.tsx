@@ -12,16 +12,21 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 
-const projectSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(200),
-  code: z.string().min(1, 'Code is required').max(50),
-  clientName: z.string().min(1, 'Client name is required').max(200),
-  location: z.string().min(1, 'Location is required').max(300),
-  startDate: z.string().min(1, 'Start date is required'),
-  endDate: z.string().optional(),
-  budget: z.coerce.number().min(0, 'Budget must be positive'),
-  status: z.enum(['PLANNED', 'ONGOING', 'COMPLETED']).optional(),
-});
+const projectSchema = z
+  .object({
+    name: z.string().min(1, 'Name is required').max(200),
+    code: z.string().min(1, 'Code is required').max(50),
+    clientName: z.string().min(1, 'Client name is required').max(200),
+    location: z.string().min(1, 'Location is required').max(300),
+    startDate: z.string().min(1, 'Start date is required'),
+    endDate: z.string().optional(),
+    budget: z.coerce.number().min(0, 'Budget must be 0 or greater'),
+    status: z.enum(['PLANNED', 'ONGOING', 'COMPLETED']).optional(),
+  })
+  .refine((data) => !data.endDate || data.endDate >= data.startDate, {
+    message: 'End date must be on or after the start date',
+    path: ['endDate'],
+  });
 
 type ProjectFormValues = z.infer<typeof projectSchema>;
 
@@ -58,6 +63,9 @@ export function ProjectForm({ project }: { project?: Project }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      if (project) {
+        queryClient.invalidateQueries({ queryKey: ['project', project.id] });
+      }
       router.push('/projects');
       router.refresh();
     },
@@ -125,6 +133,9 @@ export function ProjectForm({ project }: { project?: Project }) {
         <div className="space-y-2">
           <Label htmlFor="endDate">End Date</Label>
           <Input id="endDate" type="date" {...register('endDate')} />
+          {errors.endDate && (
+            <p className="text-xs text-destructive">{errors.endDate.message}</p>
+          )}
         </div>
       </div>
 

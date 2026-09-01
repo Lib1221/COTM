@@ -45,7 +45,12 @@ export function MaterialForm({ material }: { material?: Material }) {
   const mutation = useMutation({
     mutationFn: (data: MaterialFormValues) => {
       if (material) {
-        return api.patch<Material>(`/materials/${material.id}`, data);
+        return api.patch<Material>(`/materials/${material.id}`, {
+          name: data.name,
+          code: data.code,
+          unit: data.unit,
+          minimumStock: data.minimumStock,
+        });
       }
       return api.post<Material>('/materials', data);
     },
@@ -100,8 +105,19 @@ export function MaterialForm({ material }: { material?: Material }) {
             id="currentStock"
             type="number"
             step="0.001"
+            disabled={!!material}
             {...register('currentStock')}
           />
+          {errors.currentStock && (
+            <p className="text-xs text-destructive">
+              {errors.currentStock.message}
+            </p>
+          )}
+          {material && (
+            <p className="text-xs text-muted-foreground">
+              Use Inventory stock in/out to change stock.
+            </p>
+          )}
         </div>
         <div className="space-y-2">
           <Label htmlFor="minimumStock">Minimum Stock</Label>
@@ -111,6 +127,11 @@ export function MaterialForm({ material }: { material?: Material }) {
             step="0.001"
             {...register('minimumStock')}
           />
+          {errors.minimumStock && (
+            <p className="text-xs text-destructive">
+              {errors.minimumStock.message}
+            </p>
+          )}
         </div>
       </div>
 
