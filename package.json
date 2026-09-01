@@ -14,11 +14,11 @@
     "db:generate": "pnpm --filter @cms/db exec prisma generate",
     "db:seed": "pnpm --filter @cms/db exec prisma db seed",
     "db:studio": "pnpm --filter @cms/db exec prisma studio",
-    "docker:up": "docker compose -f docker/docker-compose.yml up -d --build",
-    "docker:down": "docker compose -f docker/docker-compose.yml down",
-    "docker:migrate": "docker compose -f docker/docker-compose.yml exec api pnpm --filter @cms/db exec prisma migrate deploy",
-    "docker:seed": "docker compose -f docker/docker-compose.yml exec api pnpm --filter @cms/db exec prisma db seed",
-    "docker:logs": "docker compose -f docker/docker-compose.yml logs -f"
+    "docker:up": "docker compose -p cms -f docker/docker-compose.yml up -d --build",
+    "docker:down": "docker compose -p cms -f docker/docker-compose.yml down",
+    "docker:migrate": "docker compose -p cms -f docker/docker-compose.yml exec api ./node_modules/.bin/prisma migrate deploy --schema=packages/db/prisma/schema.prisma",
+    "docker:seed": "docker compose -p cms -f docker/docker-compose.yml exec -e PATH=/app/node_modules/.bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin api sh -c \"cd /app/packages/db && prisma db seed\"",
+    "docker:logs": "docker compose -p cms -f docker/docker-compose.yml logs -f"
   },
   "devDependencies": {
     "prettier": "^3.3.3"

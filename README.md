@@ -14,7 +14,7 @@ A full-stack construction management system for creating projects, defining BOQs
 ## Project Structure
 
 ```
-liben/
+COTM/
 ├── apps/
 │   ├── web/          # Next.js frontend (port 3000)
 │   └── api/          # NestJS backend (port 4000)
@@ -30,11 +30,11 @@ liben/
 
 ## Prerequisites
 
-- Node.js >= 20
+- Node.js >= 20 (22 LTS recommended)
 - pnpm >= 10 (`npm install -g pnpm`)
 - Docker & Docker Compose
 
-## Getting Started
+## Getting Started (local development)
 
 ### 1. Install dependencies
 
@@ -42,31 +42,35 @@ liben/
 pnpm install
 ```
 
-### 2. Start the database
+### 2. Start PostgreSQL
 
 ```bash
-pnpm docker:up        # starts postgres, api, web
-# or just the database:
-docker compose -f docker/docker-compose.yml up -d postgres
+docker compose -p cms -f docker/docker-compose.yml up -d postgres
 ```
 
-### 3. Run database migrations
+### 3. Configure environment
 
 ```bash
-# Create a .env file or set DATABASE_URL in your shell:
-export DATABASE_URL="postgresql://cms:cms@localhost:5433/cms?schema=public"
-
-pnpm db:migrate       # runs prisma migrate dev
-pnpm db:generate      # generates Prisma client
+cp .env.example .env
+# DATABASE_URL already points at postgres on localhost:5434
 ```
 
-### 4. Seed sample data
+### 4. Run database migrations and generate the Prisma client
+
+```bash
+pnpm db:generate
+pnpm db:migrate
+```
+
+### 5. Seed sample data
 
 ```bash
 pnpm db:seed
 ```
 
-### 5. Start development servers
+Creates two sample projects, five materials (cement, steel, sand, gravel, brick), BOQ items, stock in/out, and progress records. Safe to re-run.
+
+### 6. Start development servers
 
 ```bash
 pnpm dev              # starts both web and api in parallel
@@ -76,16 +80,15 @@ pnpm dev              # starts both web and api in parallel
 - API: http://localhost:4000/api
 - Swagger docs: http://localhost:4000/api/docs
 
-## Docker (Full Stack)
+## Docker (full stack)
+
+The API image runs Prisma migrations on boot. After the stack is healthy, seed once:
 
 ```bash
-# Start everything (postgres + api + web)
+# Start postgres + api + web
 pnpm docker:up
 
-# Run migrations inside the container
-pnpm docker:migrate
-
-# Seed data
+# Seed sample data (optional, idempotent)
 pnpm docker:seed
 
 # Stop
@@ -94,6 +97,11 @@ pnpm docker:down
 # View logs
 pnpm docker:logs
 ```
+
+- Frontend: http://localhost:3000
+- API / Swagger: http://localhost:4000/api/docs
+
+`pnpm docker:migrate` is available if you need to apply migrations without rebuilding. Fresh `docker:up` already migrates automatically.
 
 ## API Endpoints
 
@@ -124,7 +132,7 @@ pnpm docker:logs
 | GET    | `/api/materials/low-stock` | List low-stock materials                              |
 | GET    | `/api/materials/:id`       | Get a material                                        |
 | POST   | `/api/materials`           | Create a material                                     |
-| PATCH  | `/api/materials/:id`       | Update a material                                     |
+| PATCH  | `/api/materials/:id`       | Update a material (not stock — use inventory)         |
 | DELETE | `/api/materials/:id`       | Delete a material                                     |
 
 ### Inventory
@@ -152,10 +160,11 @@ pnpm docker:logs
 
 ## Business Rules
 
-1. **BOQ Total**: `total = quantity x unit_price` (auto-calculated on create and update)
+1. **BOQ Total**: `total = quantity × unit_price` (auto-calculated on create and update)
 2. **Stock-Out Validation**: stock-out quantity must not exceed available stock (returns 400)
 3. **Low-Stock Warning**: material is low-stock when `currentStock <= minimumStock`
 4. **Latest Progress**: project details return the most recent progress percentage
+5. **Stock changes**: only through inventory stock-in / stock-out (not material PATCH)
 
 ## Database Schema
 
@@ -169,20 +178,23 @@ Five entities with relationships:
 ## Testing
 
 ```bash
-pnpm test              # run all tests
-pnpm --filter @cms/api run test:e2e   # e2e tests (Jest + Supertest)
+pnpm test                                 # unit tests
+pnpm --filter @cms/api run test:e2e       # e2e tests (needs DATABASE_URL)
 ```
+
+E2E coverage includes: create project, BOQ total calculation, stock in, stock out, prevent over-issue, and record progress.
 
 ## Scripts
 
-| Command            | Description                 |
-| ------------------ | --------------------------- |
-| `pnpm dev`         | Start web + api in dev mode |
-| `pnpm build`       | Build all packages          |
-| `pnpm lint`        | Lint all packages           |
-| `pnpm test`        | Run all tests               |
-| `pnpm db:migrate`  | Run Prisma migrations       |
-| `pnpm db:seed`     | Seed sample data            |
-| `pnpm db:studio`   | Open Prisma Studio          |
-| `pnpm docker:up`   | Start full stack via Docker |
-| `pnpm docker:down` | Stop Docker stack           |
+| Command            | Description                    |
+| ------------------ | ------------------------------ |
+| `pnpm dev`         | Start web + api in dev mode    |
+| `pnpm build`       | Build all packages             |
+| `pnpm lint`        | Lint all packages              |
+| `pnpm test`        | Run unit tests                 |
+| `pnpm db:migrate`  | Run Prisma migrations          |
+| `pnpm db:seed`     | Seed sample data               |
+| `pnpm db:studio`   | Open Prisma Studio             |
+| `pnpm docker:up`   | Start full stack via Docker    |
+| `pnpm docker:down` | Stop Docker stack              |
+| `pnpm docker:seed` | Seed data in the API container |

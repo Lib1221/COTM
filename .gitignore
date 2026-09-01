@@ -9,8 +9,7 @@ build/
 out/
 *.tsbuildinfo
 
-# prisma generated client (committed via packages/db; ignore stray)
-# (we DO commit generated prisma client in packages/db for sharing)
+# prisma generated client is produced by `pnpm db:generate`
 
 # env
 .env

@@ -1,0 +1,7 @@
+.next
+apps/web/.next
+apps/web/next-env.d.ts
+node_modules
+dist
+coverage
+pnpm-lock.yaml
