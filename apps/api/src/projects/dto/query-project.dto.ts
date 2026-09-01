@@ -1,11 +1,21 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import {
+  IsEnum,
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 import { ProjectStatus } from '@prisma/client';
+import { Trim } from '../../common/transformers';
 
 export class QueryProjectDto {
   @ApiPropertyOptional()
   @IsOptional()
+  @Trim()
   @IsString()
   search?: string;
 
@@ -34,8 +44,8 @@ export class QueryProjectDto {
   @IsString()
   sortBy?: string = 'createdAt';
 
-  @ApiPropertyOptional({ default: 'desc' })
+  @ApiPropertyOptional({ default: 'desc', enum: ['asc', 'desc'] })
   @IsOptional()
-  @IsString()
+  @IsIn(['asc', 'desc'])
   sortOrder?: 'asc' | 'desc' = 'desc';
 }

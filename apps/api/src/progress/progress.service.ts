@@ -58,7 +58,6 @@ export class ProgressService {
     if (!existing || existing.projectId !== projectId)
       throw new NotFoundException(`Progress record ${id} not found`);
     await this.prisma.progressRecord.delete({ where: { id } });
-    return { id };
   }
 
   private async ensureProject(projectId: string) {

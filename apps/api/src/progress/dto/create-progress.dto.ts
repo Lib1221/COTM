@@ -3,12 +3,14 @@ import { Type } from 'class-transformer';
 import {
   IsDateString,
   IsInt,
+  IsNotEmpty,
   IsOptional,
   IsString,
   Max,
   MaxLength,
   Min,
 } from 'class-validator';
+import { Trim } from '../../common/transformers';
 
 export class CreateProgressDto {
   @ApiProperty({ example: '2026-08-20' })
@@ -16,7 +18,9 @@ export class CreateProgressDto {
   date: string;
 
   @ApiProperty({ example: 'Foundation work completed' })
+  @Trim()
   @IsString()
+  @IsNotEmpty()
   @MaxLength(500)
   description: string;
 
@@ -29,6 +33,7 @@ export class CreateProgressDto {
 
   @ApiPropertyOptional({ example: 'Concrete poured and cured.' })
   @IsOptional()
+  @Trim()
   @IsString()
   @MaxLength(2000)
   notes?: string;

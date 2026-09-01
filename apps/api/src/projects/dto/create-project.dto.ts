@@ -3,6 +3,7 @@ import { Type } from 'class-transformer';
 import {
   IsDateString,
   IsEnum,
+  IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
@@ -10,25 +11,34 @@ import {
   Min,
 } from 'class-validator';
 import { ProjectStatus } from '@prisma/client';
+import { Trim } from '../../common/transformers';
 
 export class CreateProjectDto {
   @ApiProperty({ example: 'Sample Residential Building' })
+  @Trim()
   @IsString()
+  @IsNotEmpty()
   @MaxLength(200)
   name: string;
 
   @ApiProperty({ example: 'PRJ-001' })
+  @Trim()
   @IsString()
+  @IsNotEmpty()
   @MaxLength(50)
   code: string;
 
   @ApiProperty({ example: 'Acme Holdings' })
+  @Trim()
   @IsString()
+  @IsNotEmpty()
   @MaxLength(200)
   clientName: string;
 
   @ApiProperty({ example: 'Addis Ababa, Ethiopia' })
+  @Trim()
   @IsString()
+  @IsNotEmpty()
   @MaxLength(300)
   location: string;
 

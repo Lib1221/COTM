@@ -43,9 +43,15 @@ export class InventoryService {
       if (fromDate) where.date.gte = new Date(fromDate);
       if (toDate) where.date.lte = new Date(toDate);
     }
-    const orderBy = {
-      [this.sortField(sortBy)]: sortOrder === 'asc' ? 'asc' : 'desc',
-    } as Prisma.InventoryTransactionOrderByWithRelationInput;
+    const direction = sortOrder === 'asc' ? 'asc' : 'desc';
+    let orderBy: Prisma.InventoryTransactionOrderByWithRelationInput;
+    if (sortBy === 'material') {
+      orderBy = { material: { name: direction } };
+    } else if (sortBy === 'project') {
+      orderBy = { project: { name: direction } };
+    } else {
+      orderBy = { [this.sortField(sortBy)]: direction };
+    }
 
     const [data, total] = await Promise.all([
       this.prisma.inventoryTransaction.findMany({

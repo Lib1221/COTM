@@ -3,6 +3,7 @@ import { Type } from 'class-transformer';
 import {
   IsDateString,
   IsEnum,
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
@@ -10,6 +11,7 @@ import {
   Min,
 } from 'class-validator';
 import { InventoryTxType } from '@prisma/client';
+import { Trim } from '../../common/transformers';
 
 export class QueryInventoryDto {
   @ApiPropertyOptional()
@@ -27,8 +29,11 @@ export class QueryInventoryDto {
   @IsEnum(InventoryTxType)
   type?: InventoryTxType;
 
-  @ApiPropertyOptional({ description: 'Search by reference (case-insensitive)' })
+  @ApiPropertyOptional({
+    description: 'Search by reference (case-insensitive)',
+  })
   @IsOptional()
+  @Trim()
   @IsString()
   search?: string;
 
@@ -62,8 +67,8 @@ export class QueryInventoryDto {
   @IsString()
   sortBy?: string = 'date';
 
-  @ApiPropertyOptional({ default: 'desc' })
+  @ApiPropertyOptional({ default: 'desc', enum: ['asc', 'desc'] })
   @IsOptional()
-  @IsString()
+  @IsIn(['asc', 'desc'])
   sortOrder?: 'asc' | 'desc' = 'desc';
 }

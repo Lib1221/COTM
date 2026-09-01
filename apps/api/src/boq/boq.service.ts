@@ -2,10 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBoqItemDto } from './dto/create-boq-item.dto';
 import { UpdateBoqItemDto } from './dto/update-boq-item.dto';
-
-function computeTotal(quantity: number, unitPrice: number): number {
-  return Number((quantity * unitPrice).toFixed(2));
-}
+import { computeBoqTotal } from './boq.util';
 
 @Injectable()
 export class BoqService {
@@ -30,7 +27,7 @@ export class BoqService {
         unit: dto.unit,
         quantity: dto.quantity,
         unitPrice: dto.unitPrice,
-        total: computeTotal(dto.quantity, dto.unitPrice),
+        total: computeBoqTotal(dto.quantity, dto.unitPrice),
       },
     });
   }
@@ -48,7 +45,7 @@ export class BoqService {
         ...(dto.unit !== undefined && { unit: dto.unit }),
         ...(dto.quantity !== undefined && { quantity: dto.quantity }),
         ...(dto.unitPrice !== undefined && { unitPrice: dto.unitPrice }),
-        total: computeTotal(quantity, unitPrice),
+        total: computeBoqTotal(quantity, unitPrice),
       },
     });
   }
@@ -58,7 +55,6 @@ export class BoqService {
     if (!existing || existing.projectId !== projectId)
       throw new NotFoundException(`BOQ item ${id} not found`);
     await this.prisma.boqItem.delete({ where: { id } });
-    return { id };
   }
 
   private async ensureProject(projectId: string) {

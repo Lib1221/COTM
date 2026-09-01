@@ -2,22 +2,25 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsBoolean,
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
   Max,
   Min,
 } from 'class-validator';
+import { ToBoolean, Trim } from '../../common/transformers';
 
 export class QueryMaterialDto {
   @ApiPropertyOptional()
   @IsOptional()
+  @Trim()
   @IsString()
   search?: string;
 
   @ApiPropertyOptional({ description: 'Only low-stock items' })
   @IsOptional()
-  @Type(() => Boolean)
+  @ToBoolean()
   @IsBoolean()
   lowStock?: boolean;
 
@@ -41,8 +44,8 @@ export class QueryMaterialDto {
   @IsString()
   sortBy?: string = 'createdAt';
 
-  @ApiPropertyOptional({ default: 'desc' })
+  @ApiPropertyOptional({ default: 'desc', enum: ['asc', 'desc'] })
   @IsOptional()
-  @IsString()
+  @IsIn(['asc', 'desc'])
   sortOrder?: 'asc' | 'desc' = 'desc';
 }

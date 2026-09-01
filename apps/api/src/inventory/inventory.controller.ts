@@ -1,5 +1,10 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBadRequestResponse,
+  ApiCreatedResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { InventoryService } from './inventory.service';
 import { StockInDto, StockOutDto } from './dto/stock-transaction.dto';
 import { QueryInventoryDto } from './dto/query-inventory.dto';
@@ -19,6 +24,7 @@ export class InventoryController {
 
   @Post('stock-in')
   @ApiOperation({ summary: 'Record a stock-in transaction' })
+  @ApiCreatedResponse({ description: 'Stock increased' })
   stockIn(@Body() dto: StockInDto) {
     return this.service.stockIn(dto);
   }
@@ -27,6 +33,8 @@ export class InventoryController {
   @ApiOperation({
     summary: 'Record a stock-out transaction (validates available stock)',
   })
+  @ApiCreatedResponse({ description: 'Stock decreased' })
+  @ApiBadRequestResponse({ description: 'Quantity exceeds available stock' })
   stockOut(@Body() dto: StockOutDto) {
     return this.service.stockOut(dto);
   }

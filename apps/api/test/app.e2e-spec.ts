@@ -366,14 +366,40 @@ describe('Construction Management System (e2e)', () => {
         });
     });
 
-    it('PATCH /api/materials/:id should persist currentStock', async () => {
+    it('PATCH /api/materials/:id should update name without changing stock', async () => {
+      const before = await request(app.getHttpServer())
+        .get(`/api/materials/${materialId}`)
+        .expect(200);
+      const stockBefore = Number(before.body.currentStock);
+
       const res = await request(app.getHttpServer())
         .patch(`/api/materials/${materialId}`)
-        .send({ name: 'Test Cement Updated', currentStock: 500 })
+        .send({ name: 'Test Cement Updated' })
         .expect(200);
       expect(res.body.name).toBe('Test Cement Updated');
-      expect(Number(res.body.currentStock)).toBe(500);
-      expect(res.body.isLowStock).toBe(false);
+      expect(Number(res.body.currentStock)).toBe(stockBefore);
+    });
+
+    it('PATCH /api/materials/:id should reject direct currentStock updates', () => {
+      return request(app.getHttpServer())
+        .patch(`/api/materials/${materialId}`)
+        .send({ currentStock: 500 })
+        .expect(400);
+    });
+
+    it('POST /api/projects should reject endDate before startDate', () => {
+      return request(app.getHttpServer())
+        .post('/api/projects')
+        .send({
+          name: 'Invalid Dates',
+          code: 'E2E-DATES',
+          clientName: 'Client',
+          location: 'Loc',
+          startDate: '2026-12-31',
+          endDate: '2026-01-01',
+          budget: 100000,
+        })
+        .expect(400);
     });
 
     it('GET /api/materials should support search and pagination', () => {

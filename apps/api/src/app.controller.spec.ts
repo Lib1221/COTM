@@ -15,8 +15,12 @@ describe('AppController', () => {
   });
 
   describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Hello World!');
+    it('should return API metadata', () => {
+      expect(appController.getInfo()).toEqual({
+        name: 'Construction Management System API',
+        docs: '/api/docs',
+        health: '/api/health',
+      });
     });
   });
 });

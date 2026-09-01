@@ -7,7 +7,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateMaterialDto } from './dto/create-material.dto';
 import { UpdateMaterialDto } from './dto/update-material.dto';
 import { QueryMaterialDto } from './dto/query-material.dto';
-import { Prisma } from '@prisma/client';
+import { InventoryTxType, Prisma } from '@prisma/client';
 
 const ALLOWED_SORT = new Set([
   'name',
@@ -122,14 +122,34 @@ export class MaterialsService {
     });
     if (existing)
       throw new ConflictException(`Material code ${dto.code} already exists`);
-    return this.prisma.material.create({
-      data: {
-        name: dto.name,
-        code: dto.code,
-        unit: dto.unit,
-        currentStock: dto.currentStock ?? 0,
-        minimumStock: dto.minimumStock ?? 0,
-      },
+
+    const initialStock = dto.currentStock ?? 0;
+    return this.prisma.$transaction(async (tx) => {
+      const material = await tx.material.create({
+        data: {
+          name: dto.name,
+          code: dto.code,
+          unit: dto.unit,
+          currentStock: initialStock,
+          minimumStock: dto.minimumStock ?? 0,
+        },
+      });
+      if (initialStock > 0) {
+        await tx.inventoryTransaction.create({
+          data: {
+            materialId: material.id,
+            type: InventoryTxType.STOCK_IN,
+            quantity: initialStock,
+            date: new Date(),
+            reference: 'INITIAL',
+          },
+        });
+      }
+      return {
+        ...material,
+        isLowStock:
+          Number(material.currentStock) <= Number(material.minimumStock),
+      };
     });
   }
 
@@ -148,9 +168,6 @@ export class MaterialsService {
         ...(dto.name !== undefined && { name: dto.name }),
         ...(dto.code !== undefined && { code: dto.code }),
         ...(dto.unit !== undefined && { unit: dto.unit }),
-        ...(dto.currentStock !== undefined && {
-          currentStock: dto.currentStock,
-        }),
         ...(dto.minimumStock !== undefined && {
           minimumStock: dto.minimumStock,
         }),
@@ -165,6 +182,5 @@ export class MaterialsService {
   async remove(id: string) {
     await this.findOne(id);
     await this.prisma.material.delete({ where: { id } });
-    return { id };
   }
 }

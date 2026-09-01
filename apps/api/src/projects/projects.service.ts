@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -106,7 +107,16 @@ export class ProjectsService {
     };
   }
 
+  private assertDateRange(startDate: string, endDate?: string | null) {
+    if (endDate && new Date(endDate) < new Date(startDate)) {
+      throw new BadRequestException(
+        'End date must be on or after the start date',
+      );
+    }
+  }
+
   async create(dto: CreateProjectDto) {
+    this.assertDateRange(dto.startDate, dto.endDate);
     const existing = await this.prisma.project.findUnique({
       where: { code: dto.code },
     });
@@ -127,12 +137,15 @@ export class ProjectsService {
   }
 
   async update(id: string, dto: UpdateProjectDto) {
-    await this.findOne(id);
-    if (
-      dto.code &&
-      dto.code !==
-        (await this.prisma.project.findUnique({ where: { id } }))?.code
-    ) {
+    const existing = await this.prisma.project.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException(`Project ${id} not found`);
+    const startDate = dto.startDate ?? existing.startDate.toISOString();
+    const endDate =
+      dto.endDate !== undefined
+        ? dto.endDate
+        : (existing.endDate?.toISOString() ?? null);
+    this.assertDateRange(startDate, endDate);
+    if (dto.code && dto.code !== existing.code) {
       const dup = await this.prisma.project.findUnique({
         where: { code: dto.code },
       });
@@ -161,6 +174,5 @@ export class ProjectsService {
   async remove(id: string) {
     await this.findOne(id);
     await this.prisma.project.delete({ where: { id } });
-    return { id };
   }
 }

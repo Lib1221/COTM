@@ -9,7 +9,13 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiCreatedResponse,
+  ApiNotFoundResponse,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+} from '@nestjs/swagger';
 import { ProgressService } from './progress.service';
 import { CreateProgressDto } from './dto/create-progress.dto';
 import { UpdateProgressDto } from './dto/update-progress.dto';
@@ -21,12 +27,15 @@ export class ProgressController {
 
   @Get()
   @ApiOperation({ summary: 'List progress records for a project' })
+  @ApiParam({ name: 'projectId', description: 'Project id' })
   list(@Param('projectId') projectId: string) {
     return this.service.listByProject(projectId);
   }
 
   @Post()
   @ApiOperation({ summary: 'Add a progress record to a project' })
+  @ApiParam({ name: 'projectId', description: 'Project id' })
+  @ApiCreatedResponse({ description: 'Progress record created' })
   create(
     @Param('projectId') projectId: string,
     @Body() dto: CreateProgressDto,
@@ -36,6 +45,9 @@ export class ProgressController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a progress record' })
+  @ApiParam({ name: 'projectId', description: 'Project id' })
+  @ApiParam({ name: 'id', description: 'Progress record id' })
+  @ApiNotFoundResponse({ description: 'Progress record not found' })
   update(
     @Param('projectId') projectId: string,
     @Param('id') id: string,
@@ -47,6 +59,8 @@ export class ProgressController {
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete a progress record' })
+  @ApiParam({ name: 'projectId', description: 'Project id' })
+  @ApiParam({ name: 'id', description: 'Progress record id' })
   remove(@Param('projectId') projectId: string, @Param('id') id: string) {
     return this.service.remove(projectId, id);
   }
