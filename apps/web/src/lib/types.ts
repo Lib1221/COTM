@@ -1,3 +1,17 @@
+export type UserRole = 'ADMIN' | 'MANAGER' | 'VIEWER';
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  name: string;
+  role: UserRole;
+}
+
+export interface AuthResponse {
+  accessToken: string;
+  user: AuthUser;
+}
+
 export type ProjectStatus = 'PLANNED' | 'ONGOING' | 'COMPLETED';
 
 export interface Project {

@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { QueryProvider } from '@/lib/query-provider';
-import { Sidebar } from '@/components/sidebar';
+import { AuthProvider } from '@/lib/auth-context';
+import { AppShell } from '@/components/app-shell';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -31,10 +32,9 @@ export default function RootLayout({
     >
       <body className="min-h-full">
         <QueryProvider>
-          <div className="flex min-h-screen">
-            <Sidebar />
-            <main className="flex-1 overflow-auto p-6">{children}</main>
-          </div>
+          <AuthProvider>
+            <AppShell>{children}</AppShell>
+          </AuthProvider>
         </QueryProvider>
       </body>
     </html>

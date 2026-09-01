@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/lib/auth-context';
+import { Button } from '@/components/ui/button';
 
 const navItems = [
   { href: '/', label: 'Dashboard' },
@@ -13,6 +15,7 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { user, logout } = useAuth();
 
   return (
     <aside className="flex min-h-screen w-60 flex-col border-r bg-muted/30">
@@ -43,6 +46,17 @@ export function Sidebar() {
           );
         })}
       </nav>
+      {user && (
+        <div className="border-t p-4">
+          <div className="mb-2 truncate text-sm font-medium">{user.name}</div>
+          <div className="mb-3 truncate text-xs text-muted-foreground">
+            {user.email}
+          </div>
+          <Button variant="outline" size="sm" className="w-full" onClick={logout}>
+            Sign out
+          </Button>
+        </div>
+      )}
     </aside>
   );
 }

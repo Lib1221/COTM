@@ -1,10 +1,27 @@
-import { PrismaClient, ProjectStatus, InventoryTxType } from '@prisma/client';
+import { PrismaClient, ProjectStatus, InventoryTxType, UserRole } from '@prisma/client';
+import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
 const SEED_REFERENCES = ['PO-2026-0001', 'ISS-2026-0001', 'INITIAL'];
 
 async function main() {
+  const passwordHash = await bcrypt.hash(
+    process.env.SEED_ADMIN_PASSWORD ?? 'admin12345',
+    10,
+  );
+  const admin = await prisma.user.upsert({
+    where: { email: 'admin@cms.test' },
+    update: {},
+    create: {
+      email: 'admin@cms.test',
+      name: 'Site Admin',
+      passwordHash,
+      role: UserRole.ADMIN,
+    },
+  });
+  console.log('Seeded admin user:', admin.email);
+
   const project = await prisma.project.upsert({
     where: { code: 'PRJ-001' },
     update: {
