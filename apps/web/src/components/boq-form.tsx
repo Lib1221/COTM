@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import type { BoqItem } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -59,8 +60,10 @@ export function BoqForm({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['project', projectId] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      toast.success(item ? 'BOQ item updated' : 'BOQ item added');
       onSuccess?.();
     },
+    onError: (err: Error) => toast.error(err.message),
   });
 
   return (

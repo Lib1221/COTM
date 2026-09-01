@@ -3,10 +3,10 @@ import type { ProjectStatus } from '@/lib/types';
 
 const statusConfig: Record<
   ProjectStatus,
-  { label: string; variant: 'default' | 'secondary' | 'success' }
+  { label: string; variant: 'default' | 'secondary' | 'success' | 'warning' }
 > = {
   PLANNED: { label: 'Planned', variant: 'secondary' },
-  ONGOING: { label: 'Ongoing', variant: 'default' },
+  ONGOING: { label: 'Ongoing', variant: 'warning' },
   COMPLETED: { label: 'Completed', variant: 'success' },
 };
 

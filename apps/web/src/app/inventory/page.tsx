@@ -11,6 +11,7 @@ import {
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { useDebouncedValue } from '@/lib/use-debounce';
 import type {
@@ -26,6 +27,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DataTable, TablePagination } from '@/components/data-table';
+import { PageHeader } from '@/components/page-header';
 import { formatDate } from '@/lib/utils';
 
 const stockInSchema = z.object({
@@ -148,8 +150,7 @@ export default function InventoryPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Inventory</h1>
+      <PageHeader title="Inventory" description="Track stock movements and transactions.">
         <div className="flex gap-2">
           <Button
             variant="outline"
@@ -169,7 +170,7 @@ export default function InventoryPage() {
             Stock Out
           </Button>
         </div>
-      </div>
+      </PageHeader>
 
       {showStockIn && (
         <StockInForm
@@ -249,8 +250,10 @@ function StockInForm({
       queryClient.invalidateQueries({ queryKey: ['materials'] });
       queryClient.invalidateQueries({ queryKey: ['materials-all'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      toast.success('Stock recorded');
       onClose();
     },
+    onError: (err: Error) => toast.error(err.message),
   });
 
   return (
@@ -356,8 +359,10 @@ function StockOutForm({
       queryClient.invalidateQueries({ queryKey: ['materials'] });
       queryClient.invalidateQueries({ queryKey: ['materials-all'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      toast.success('Stock recorded');
       onClose();
     },
+    onError: (err: Error) => toast.error(err.message),
   });
 
   return (

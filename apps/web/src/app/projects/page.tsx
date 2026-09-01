@@ -16,6 +16,7 @@ import { buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { StatusBadge } from '@/components/status-badge';
 import { DataTable, TablePagination } from '@/components/data-table';
+import { PageHeader } from '@/components/page-header';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 
 const columnHelper = createColumnHelper<Project>();
@@ -107,15 +108,14 @@ export default function ProjectsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Projects</h1>
+      <PageHeader title="Projects" description="Create and manage construction projects.">
         <Link
           href="/projects/new"
           className={cn(buttonVariants({ variant: 'default' }))}
         >
           New Project
         </Link>
-      </div>
+      </PageHeader>
 
       <Input
         placeholder="Search by name, code, or client..."

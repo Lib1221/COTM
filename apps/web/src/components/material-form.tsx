@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import type { Material } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -58,9 +59,11 @@ export function MaterialForm({ material }: { material?: Material }) {
       queryClient.invalidateQueries({ queryKey: ['materials'] });
       queryClient.invalidateQueries({ queryKey: ['materials-all'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      toast.success(material ? 'Material updated' : 'Material created');
       router.push('/materials');
       router.refresh();
     },
+    onError: (err: Error) => toast.error(err.message),
   });
 
   return (

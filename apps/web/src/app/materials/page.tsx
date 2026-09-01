@@ -9,6 +9,7 @@ import {
   createColumnHelper,
   type SortingState,
 } from '@tanstack/react-table';
+import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { useDebouncedValue } from '@/lib/use-debounce';
 import type { Material, PaginatedResponse } from '@/lib/types';
@@ -16,6 +17,8 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { DataTable, TablePagination } from '@/components/data-table';
+import { ConfirmDialog } from '@/components/confirm-dialog';
+import { PageHeader } from '@/components/page-header';
 import { cn } from '@/lib/utils';
 
 export default function MaterialsPage() {
@@ -28,6 +31,7 @@ export default function MaterialsPage() {
     pageSize: 10,
   });
   const [actionError, setActionError] = useState<string | null>(null);
+  const [deleteMaterial, setDeleteMaterial] = useState<Material | null>(null);
   const queryClient = useQueryClient();
 
   const { data, isLoading, isError, error } = useQuery({
@@ -54,12 +58,13 @@ export default function MaterialsPage() {
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api.delete(`/materials/${id}`),
     onSuccess: () => {
+      toast.success('Material deleted');
       setActionError(null);
       queryClient.invalidateQueries({ queryKey: ['materials'] });
       queryClient.invalidateQueries({ queryKey: ['materials-all'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
-    onError: (err: Error) => setActionError(err.message),
+    onError: (err: Error) => toast.error(err.message),
   });
 
   const columnHelper = createColumnHelper<Material>();
@@ -110,10 +115,7 @@ export default function MaterialsPage() {
             variant="ghost"
             size="sm"
             disabled={deleteMutation.isPending}
-            onClick={() => {
-              if (confirm(`Delete material "${i.row.original.name}"?`))
-                deleteMutation.mutate(i.row.original.id);
-            }}
+            onClick={() => setDeleteMaterial(i.row.original)}
           >
             Delete
           </Button>
@@ -136,15 +138,14 @@ export default function MaterialsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Materials</h1>
+      <PageHeader title="Materials" description="Manage your material catalog and stock levels.">
         <Link
           href="/materials/new"
           className={cn(buttonVariants({ variant: 'default' }))}
         >
           New Material
         </Link>
-      </div>
+      </PageHeader>
 
       <div className="flex flex-wrap items-center gap-4">
         <Input
@@ -186,6 +187,18 @@ export default function MaterialsPage() {
         total={data?.meta.total}
         onPrevious={() => table.previousPage()}
         onNext={() => table.nextPage()}
+      />
+
+      <ConfirmDialog
+        open={deleteMaterial !== null}
+        onOpenChange={(open) => !open && setDeleteMaterial(null)}
+        onConfirm={() =>
+          deleteMaterial && deleteMutation.mutate(deleteMaterial.id)
+        }
+        title={`Delete material "${deleteMaterial?.name ?? ''}"?`}
+        description="This will permanently remove the material from the catalog."
+        confirmLabel="Delete"
+        destructive
       />
     </div>
   );

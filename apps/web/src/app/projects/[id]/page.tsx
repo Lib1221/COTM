@@ -14,6 +14,8 @@ import {
   type SortingState,
 } from '@tanstack/react-table';
 import { api } from '@/lib/api';
+import { toast } from 'sonner';
+import { ArrowLeft, Pencil, Trash2 } from 'lucide-react';
 import type { ProjectDetail, BoqItem, ProgressRecord } from '@/lib/types';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -26,9 +28,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { BoqForm } from '@/components/boq-form';
 import { ProgressForm } from '@/components/progress-form';
 import { DataTable, TablePagination } from '@/components/data-table';
+import { Progress } from '@/components/ui/progress';
+import { Skeleton } from '@/components/ui/skeleton';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
 
 export default function ProjectDetailPage({
@@ -51,7 +56,7 @@ function ProjectDetail({ id }: { id: string }) {
     open: boolean;
     record?: ProgressRecord;
   }>({ open: false });
-  const [actionError, setActionError] = React.useState<string | null>(null);
+  const [deleteProject, setDeleteProject] = React.useState(false);
 
   const {
     data: project,
@@ -68,15 +73,35 @@ function ProjectDetail({ id }: { id: string }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      toast.success('Project deleted');
       router.push('/projects');
     },
-    onError: (err: Error) => setActionError(err.message),
+    onError: (err: Error) => toast.error(err.message),
   });
 
-  if (isLoading) return <div className="text-muted-foreground">Loading...</div>;
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-48" />
+        <div className="grid gap-4 md:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Card key={i}>
+              <CardHeader>
+                <Skeleton className="h-4 w-20" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-6 w-32" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <Skeleton className="h-64 w-full" />
+      </div>
+    );
+  }
   if (isError) {
     return (
-      <div className="text-destructive">
+      <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-destructive">
         {error?.message ?? 'Failed to load project.'}
       </div>
     );
@@ -92,7 +117,8 @@ function ProjectDetail({ id }: { id: string }) {
             href="/projects"
             className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}
           >
-            ← Back
+            <ArrowLeft className="h-4 w-4" />
+            Back
           </Link>
           <h1 className="text-2xl font-bold">{project.name}</h1>
           <StatusBadge status={project.status} />
@@ -102,23 +128,30 @@ function ProjectDetail({ id }: { id: string }) {
             href={`/projects/${id}/edit`}
             className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
           >
+            <Pencil className="h-4 w-4" />
             Edit
           </Link>
           <Button
             variant="destructive"
             size="sm"
             disabled={deleteMutation.isPending}
-            onClick={() => {
-              if (confirm(`Delete project "${project.name}"?`))
-                deleteMutation.mutate();
-            }}
+            onClick={() => setDeleteProject(true)}
           >
+            <Trash2 className="h-4 w-4" />
             {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
           </Button>
         </div>
       </div>
 
-      {actionError && <p className="text-sm text-destructive">{actionError}</p>}
+      <ConfirmDialog
+        open={deleteProject}
+        onOpenChange={setDeleteProject}
+        onConfirm={() => deleteMutation.mutate()}
+        title={`Delete project "${project.name}"?`}
+        description="This will permanently remove the project, its BOQ items, and progress records."
+        confirmLabel="Delete project"
+        destructive
+      />
 
       <div className="grid gap-4 md:grid-cols-3">
         <InfoCard title="Code" value={project.code} />
@@ -139,13 +172,8 @@ function ProjectDetail({ id }: { id: string }) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-2">
-              <div className="h-2 w-24 rounded-full bg-muted">
-                <div
-                  className="h-2 rounded-full bg-primary"
-                  style={{ width: `${project.latestProgress}%` }}
-                />
-              </div>
+            <div className="flex items-center gap-3">
+              <Progress value={project.latestProgress} className="w-28" />
               <span className="text-sm font-semibold">
                 {project.latestProgress}%
               </span>
@@ -278,17 +306,17 @@ function BoqSection({
   const queryClient = useQueryClient();
   const [globalFilter, setGlobalFilter] = React.useState('');
   const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [actionError, setActionError] = React.useState<string | null>(null);
+  const [deleteItem, setDeleteItem] = React.useState<BoqItem | null>(null);
 
   const deleteMutation = useMutation({
     mutationFn: (itemId: string) =>
       api.delete(`/projects/${projectId}/boq/${itemId}`),
     onSuccess: () => {
-      setActionError(null);
+      toast.success('BOQ item deleted');
       queryClient.invalidateQueries({ queryKey: ['project', projectId] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
-    onError: (err: Error) => setActionError(err.message),
+    onError: (err: Error) => toast.error(err.message),
   });
 
   const columnHelper = createColumnHelper<BoqItem>();
@@ -335,10 +363,7 @@ function BoqSection({
               variant="ghost"
               size="sm"
               disabled={deleteMutation.isPending}
-              onClick={() => {
-                if (confirm('Delete this BOQ item?'))
-                  deleteMutation.mutate(i.row.original.id);
-              }}
+              onClick={() => setDeleteItem(i.row.original)}
             >
               Delete
             </Button>
@@ -381,9 +406,6 @@ function BoqSection({
           onChange={(e) => setGlobalFilter(e.target.value)}
           className="max-w-sm"
         />
-        {actionError && (
-          <p className="text-sm text-destructive">{actionError}</p>
-        )}
         <DataTable
           table={table}
           columnCount={columns.length}
@@ -402,6 +424,15 @@ function BoqSection({
           />
         </div>
       </CardContent>
+      <ConfirmDialog
+        open={deleteItem !== null}
+        onOpenChange={(open) => !open && setDeleteItem(null)}
+        onConfirm={() => deleteItem && deleteMutation.mutate(deleteItem.id)}
+        title="Delete this BOQ item?"
+        description="This will permanently remove the BOQ item from the project."
+        confirmLabel="Delete"
+        destructive
+      />
     </Card>
   );
 }
@@ -418,18 +449,20 @@ function ProgressSection({
   onEdit: (record: ProgressRecord) => void;
 }) {
   const queryClient = useQueryClient();
-  const [actionError, setActionError] = React.useState<string | null>(null);
+  const [deleteRecord, setDeleteRecord] = React.useState<ProgressRecord | null>(
+    null,
+  );
 
   const deleteMutation = useMutation({
     mutationFn: (recordId: string) =>
       api.delete(`/projects/${projectId}/progress/${recordId}`),
     onSuccess: () => {
-      setActionError(null);
+      toast.success('Progress record deleted');
       queryClient.invalidateQueries({ queryKey: ['project', projectId] });
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
-    onError: (err: Error) => setActionError(err.message),
+    onError: (err: Error) => toast.error(err.message),
   });
 
   return (
@@ -443,9 +476,6 @@ function ProgressSection({
         </div>
       </CardHeader>
       <CardContent>
-        {actionError && (
-          <p className="mb-3 text-sm text-destructive">{actionError}</p>
-        )}
         {records.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             No progress records yet.
@@ -470,10 +500,7 @@ function ProgressSection({
                       variant="ghost"
                       size="sm"
                       disabled={deleteMutation.isPending}
-                      onClick={() => {
-                        if (confirm('Delete this progress record?'))
-                          deleteMutation.mutate(r.id);
-                      }}
+                      onClick={() => setDeleteRecord(r)}
                     >
                       Delete
                     </Button>
@@ -489,6 +516,15 @@ function ProgressSection({
           </div>
         )}
       </CardContent>
+      <ConfirmDialog
+        open={deleteRecord !== null}
+        onOpenChange={(open) => !open && setDeleteRecord(null)}
+        onConfirm={() => deleteRecord && deleteMutation.mutate(deleteRecord.id)}
+        title="Delete this progress record?"
+        description="This will permanently remove the progress record."
+        confirmLabel="Delete"
+        destructive
+      />
     </Card>
   );
 }

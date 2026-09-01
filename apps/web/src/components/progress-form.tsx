@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import type { ProgressRecord } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -69,8 +70,10 @@ export function ProgressForm({
       queryClient.invalidateQueries({ queryKey: ['project', projectId] });
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      toast.success(record ? 'Progress record updated' : 'Progress recorded');
       onSuccess?.();
     },
+    onError: (err: Error) => toast.error(err.message),
   });
 
   return (

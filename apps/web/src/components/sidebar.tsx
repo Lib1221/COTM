@@ -2,61 +2,66 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import {
+  LayoutDashboard,
+  FolderKanban,
+  Package,
+  Boxes,
+  HardHat,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/lib/auth-context';
-import { Button } from '@/components/ui/button';
 
 const navItems = [
-  { href: '/', label: 'Dashboard' },
-  { href: '/projects', label: 'Projects' },
-  { href: '/materials', label: 'Materials' },
-  { href: '/inventory', label: 'Inventory' },
+  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/projects', label: 'Projects', icon: FolderKanban },
+  { href: '/materials', label: 'Materials', icon: Package },
+  { href: '/inventory', label: 'Inventory', icon: Boxes },
 ];
 
-export function Sidebar() {
+export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
-  const { user, logout } = useAuth();
 
   return (
-    <aside className="flex min-h-screen w-60 flex-col border-r bg-muted/30">
-      <div className="flex h-16 items-center gap-2 border-b px-6">
-        <span className="text-lg font-bold tracking-tight">
-          Construction MS
-        </span>
+    <aside className="flex h-full w-60 flex-col bg-sidebar text-sidebar-foreground">
+      <div className="flex h-16 items-center gap-2.5 border-b border-sidebar-border px-5">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+          <HardHat className="h-5 w-5" />
+        </div>
+        <div className="flex flex-col leading-none">
+          <span className="text-sm font-bold tracking-tight">Liben CMS</span>
+          <span className="text-[11px] text-muted-foreground">
+            Construction Mgmt
+          </span>
+        </div>
       </div>
-      <nav className="flex flex-1 flex-col gap-1 p-4">
+      <nav className="flex flex-1 flex-col gap-1 p-3">
         {navItems.map((item) => {
           const active =
             item.href === '/'
               ? pathname === '/'
               : pathname.startsWith(item.href);
+          const Icon = item.icon;
           return (
             <Link
               key={item.href}
               href={item.href}
+              onClick={onNavigate}
               className={cn(
-                'rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                 active
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                  ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                  : 'text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-foreground',
               )}
             >
+              <Icon className="h-4.5 w-4.5 shrink-0" />
               {item.label}
+              {active && (
+                <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
+              )}
             </Link>
           );
         })}
       </nav>
-      {user && (
-        <div className="border-t p-4">
-          <div className="mb-2 truncate text-sm font-medium">{user.name}</div>
-          <div className="mb-3 truncate text-xs text-muted-foreground">
-            {user.email}
-          </div>
-          <Button variant="outline" size="sm" className="w-full" onClick={logout}>
-            Sign out
-          </Button>
-        </div>
-      )}
     </aside>
   );
 }

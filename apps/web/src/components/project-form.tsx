@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import type { Project } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -66,9 +67,11 @@ export function ProjectForm({ project }: { project?: Project }) {
       if (project) {
         queryClient.invalidateQueries({ queryKey: ['project', project.id] });
       }
+      toast.success(project ? 'Project updated' : 'Project created');
       router.push('/projects');
       router.refresh();
     },
+    onError: (err: Error) => toast.error(err.message),
   });
 
   return (
