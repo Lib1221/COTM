@@ -1,10 +1,11 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call */
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 import { PrismaService } from './../src/prisma/prisma.service';
+import { PrismaExceptionFilter } from './../src/common/prisma-exception.filter';
 
 describe('Construction Management System (e2e)', () => {
   let app: INestApplication<App>;
@@ -24,6 +25,7 @@ describe('Construction Management System (e2e)', () => {
         forbidNonWhitelisted: true,
       }),
     );
+    app.useGlobalFilters(new PrismaExceptionFilter());
     await app.init();
     prisma = app.get(PrismaService);
   });
@@ -104,6 +106,26 @@ describe('Construction Management System (e2e)', () => {
         });
     });
 
+    it('PATCH /api/projects/:id should update a project', async () => {
+      const res = await request(app.getHttpServer())
+        .patch(`/api/projects/${projectId}`)
+        .send({ status: 'ONGOING', location: 'Updated Location' })
+        .expect(200);
+      expect(res.body.status).toBe('ONGOING');
+      expect(res.body.location).toBe('Updated Location');
+    });
+
+    it('GET /api/projects should support pagination', () => {
+      return request(app.getHttpServer())
+        .get('/api/projects?page=1&pageSize=2')
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.meta.page).toBe(1);
+          expect(res.body.meta.pageSize).toBe(2);
+          expect(res.body.data.length).toBeLessThanOrEqual(2);
+        });
+    });
+
     describe('BOQ', () => {
       let boqItemId: string;
 
@@ -140,9 +162,35 @@ describe('Construction Management System (e2e)', () => {
             expect(Number(res.body.totalValue)).toBe(75000);
           });
       });
+
+      it('PATCH /api/projects/:other/boq/:id should reject cross-project update', async () => {
+        const other = await request(app.getHttpServer())
+          .post('/api/projects')
+          .send({
+            name: 'Other Project',
+            code: 'E2E-OTHER',
+            clientName: 'Client',
+            location: 'Loc',
+            startDate: '2026-08-20',
+            budget: 100000,
+          })
+          .expect(201);
+        return request(app.getHttpServer())
+          .patch(`/api/projects/${other.body.id}/boq/${boqItemId}`)
+          .send({ quantity: 1 })
+          .expect(404);
+      });
+
+      it('DELETE /api/projects/:projectId/boq/:id should remove the BOQ item', () => {
+        return request(app.getHttpServer())
+          .delete(`/api/projects/${projectId}/boq/${boqItemId}`)
+          .expect(204);
+      });
     });
 
     describe('Progress', () => {
+      let progressId: string;
+
       it('POST /api/projects/:projectId/progress should record progress', async () => {
         const res = await request(app.getHttpServer())
           .post(`/api/projects/${projectId}/progress`)
@@ -155,6 +203,7 @@ describe('Construction Management System (e2e)', () => {
           .expect(201);
 
         expect(res.body.progressPercent).toBe(35);
+        progressId = res.body.id;
       });
 
       it('GET /api/projects/:id should show latest progress', () => {
@@ -176,6 +225,45 @@ describe('Construction Management System (e2e)', () => {
           })
           .expect(400);
       });
+
+      it('PATCH /api/projects/:projectId/progress/:id should update the record', async () => {
+        const res = await request(app.getHttpServer())
+          .patch(`/api/projects/${projectId}/progress/${progressId}`)
+          .send({ progressPercent: 50, description: 'Updated description' })
+          .expect(200);
+        expect(res.body.progressPercent).toBe(50);
+        expect(res.body.description).toBe('Updated description');
+      });
+
+      it('PATCH /api/projects/:other/progress/:id should reject cross-project update', async () => {
+        const other = await request(app.getHttpServer())
+          .post('/api/projects')
+          .send({
+            name: 'Other Progress Project',
+            code: 'E2E-PROG-OTHER',
+            clientName: 'Client',
+            location: 'Loc',
+            startDate: '2026-08-20',
+            budget: 100000,
+          })
+          .expect(201);
+        return request(app.getHttpServer())
+          .patch(`/api/projects/${other.body.id}/progress/${progressId}`)
+          .send({ progressPercent: 10 })
+          .expect(404);
+      });
+
+      it('DELETE /api/projects/:projectId/progress/:id should remove the record', () => {
+        return request(app.getHttpServer())
+          .delete(`/api/projects/${projectId}/progress/${progressId}`)
+          .expect(204);
+      });
+    });
+
+    it('DELETE /api/projects/:id should delete the project', () => {
+      return request(app.getHttpServer())
+        .delete(`/api/projects/${projectId}`)
+        .expect(204);
     });
   });
 
@@ -266,6 +354,63 @@ describe('Construction Management System (e2e)', () => {
         .expect((res) => {
           expect(res.body.total).toBeGreaterThan(0);
         });
+    });
+
+    it('GET /api/materials/:id should return a material', () => {
+      return request(app.getHttpServer())
+        .get(`/api/materials/${materialId}`)
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.id).toBe(materialId);
+          expect(res.body).toHaveProperty('isLowStock');
+        });
+    });
+
+    it('PATCH /api/materials/:id should persist currentStock', async () => {
+      const res = await request(app.getHttpServer())
+        .patch(`/api/materials/${materialId}`)
+        .send({ name: 'Test Cement Updated', currentStock: 500 })
+        .expect(200);
+      expect(res.body.name).toBe('Test Cement Updated');
+      expect(Number(res.body.currentStock)).toBe(500);
+      expect(res.body.isLowStock).toBe(false);
+    });
+
+    it('GET /api/materials should support search and pagination', () => {
+      return request(app.getHttpServer())
+        .get('/api/materials?search=Cement&page=1&pageSize=5')
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.meta.pageSize).toBe(5);
+          expect(
+            res.body.data.every((m: { name: string }) =>
+              m.name.toLowerCase().includes('cement'),
+            ),
+          ).toBe(true);
+        });
+    });
+
+    it('GET /api/inventory/transactions should support filter and pagination', () => {
+      return request(app.getHttpServer())
+        .get(
+          `/api/inventory/transactions?materialId=${materialId}&page=1&pageSize=5`,
+        )
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.meta.page).toBe(1);
+          expect(res.body.meta.pageSize).toBe(5);
+          expect(
+            res.body.data.every(
+              (t: { materialId: string }) => t.materialId === materialId,
+            ),
+          ).toBe(true);
+        });
+    });
+
+    it('DELETE /api/materials/:id should reject when referenced by transactions', () => {
+      return request(app.getHttpServer())
+        .delete(`/api/materials/${materialId}`)
+        .expect(409);
     });
   });
 
