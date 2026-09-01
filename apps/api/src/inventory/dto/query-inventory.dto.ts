@@ -27,6 +27,11 @@ export class QueryInventoryDto {
   @IsEnum(InventoryTxType)
   type?: InventoryTxType;
 
+  @ApiPropertyOptional({ description: 'Search by reference (case-insensitive)' })
+  @IsOptional()
+  @IsString()
+  search?: string;
+
   @ApiPropertyOptional({ description: 'ISO date string' })
   @IsOptional()
   @IsDateString()

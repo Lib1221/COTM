@@ -23,6 +23,7 @@ export class InventoryService {
       materialId,
       projectId,
       type,
+      search,
       fromDate,
       toDate,
       page = 1,
@@ -34,6 +35,9 @@ export class InventoryService {
     if (materialId) where.materialId = materialId;
     if (projectId) where.projectId = projectId;
     if (type) where.type = type;
+    if (search) {
+      where.reference = { contains: search, mode: 'insensitive' };
+    }
     if (fromDate || toDate) {
       where.date = {};
       if (fromDate) where.date.gte = new Date(fromDate);
