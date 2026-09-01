@@ -1,13 +1,15 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "CommonJS",
-    "moduleResolution": "Node",
+    "module": "esnext",
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "strict": true,
     "resolveJsonModule": true,
-    "outDir": "dist"
+    "types": ["node"],
+    "noEmit": true,
+    "rootDir": "./prisma"
   },
-  "include": ["prisma"]
+  "files": ["./prisma/seed.ts"]
 }
