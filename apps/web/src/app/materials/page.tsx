@@ -21,6 +21,7 @@ import { ConfirmDialog } from '@/components/confirm-dialog';
 import { PageHeader } from '@/components/page-header';
 import { useAuth } from '@/lib/auth-context';
 import { cn } from '@/lib/utils';
+import { ExportCsvButton } from '@/components/export-csv-button';
 
 export default function MaterialsPage() {
   const { can } = useAuth();
@@ -144,7 +145,21 @@ export default function MaterialsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Materials" description="Manage your material catalog and stock levels.">
+      <PageHeader
+        title="Materials"
+        description="Manage your material catalog and stock levels."
+      >
+        <ExportCsvButton
+          filename="materials"
+          rows={(data?.data ?? []).map((material) => ({
+            code: material.code,
+            name: material.name,
+            unit: material.unit,
+            currentStock: material.currentStock,
+            minimumStock: material.minimumStock,
+            status: material.isLowStock ? 'Low stock' : 'In stock',
+          }))}
+        />
         {can('create') && (
           <Link
             href="/materials/new"

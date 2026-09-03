@@ -510,7 +510,11 @@ function ProgressSection({
                       {formatDate(r.date)}
                     </span>
                     {can('update') && (
-                      <Button variant="ghost" size="sm" onClick={() => onEdit(r)}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onEdit(r)}
+                      >
                         Edit
                       </Button>
                     )}

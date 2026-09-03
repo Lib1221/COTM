@@ -1,25 +1,46 @@
-import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import type { Metadata, Viewport } from 'next';
+import { Archivo, Geist_Mono } from 'next/font/google';
+import Script from 'next/script';
 import './globals.css';
 import { QueryProvider } from '@/lib/query-provider';
 import { AuthProvider } from '@/lib/auth-context';
 import { AppShell } from '@/components/app-shell';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from '@/components/sonner';
+import { APPEARANCE_INIT_SCRIPT } from '@/lib/appearance';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+const archivo = Archivo({
+  variable: '--font-archivo',
   subsets: ['latin'],
+  display: 'swap',
 });
 
 const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
   subsets: ['latin'],
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
-  title: 'Construction Management System',
-  description: 'Mini Construction Management System',
+  title: {
+    default: 'Liben CMS',
+    template: '%s · Liben CMS',
+  },
+  description:
+    'Construction site control for projects, BOQ, materials, inventory, and progress.',
+  applicationName: 'Liben CMS',
+  manifest: '/manifest.webmanifest',
+  icons: {
+    icon: '/favicon.svg',
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f4f1ea' },
+    { media: '(prefers-color-scheme: dark)', color: '#2a241c' },
+  ],
+  colorScheme: 'light dark',
 };
 
 export default function RootLayout({
@@ -31,15 +52,16 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      data-palette="hivis"
+      className={`${archivo.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
+        <Script
+          id="cms-appearance"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: APPEARANCE_INIT_SCRIPT }}
+        />
+        <ThemeProvider>
           <QueryProvider>
             <AuthProvider>
               <AppShell>{children}</AppShell>

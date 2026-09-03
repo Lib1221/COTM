@@ -63,7 +63,9 @@ export function SheetContent({
     <div
       className={cn(
         'absolute inset-y-0 h-full w-72 border-r bg-sidebar shadow-lg',
-        side === 'left' ? 'left-0 animate-in slide-in-from-left' : 'right-0 animate-in slide-in-from-right',
+        side === 'left'
+          ? 'left-0 animate-in slide-in-from-left'
+          : 'right-0 animate-in slide-in-from-right',
         className,
       )}
     >

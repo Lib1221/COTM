@@ -11,6 +11,7 @@ import {
 import { BaseExceptionFilter } from '@nestjs/core';
 import { Prisma } from '@prisma/client';
 import { Response } from 'express';
+import type { RequestWithId } from './request-id.middleware';
 
 // Maps known Prisma error codes to clean HTTP responses so that database
 // constraint violations do not leak as opaque 500s.
@@ -24,6 +25,9 @@ export class PrismaExceptionFilter
   catch(exception: Prisma.PrismaClientKnownRequestError, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
+    const request = ctx.getRequest<RequestWithId>();
+    const requestId = request.requestId;
+    const timestamp = new Date().toISOString();
 
     let error:
       NotFoundException | ConflictException | BadRequestException | null = null;
@@ -60,8 +64,8 @@ export class PrismaExceptionFilter
         .status(status)
         .json(
           typeof body === 'string'
-            ? { statusCode: status, message: body }
-            : body,
+            ? { statusCode: status, message: body, requestId, timestamp }
+            : { ...body, requestId, timestamp },
         );
       return;
     }
@@ -69,6 +73,8 @@ export class PrismaExceptionFilter
     response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
       statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
       message: 'Internal server error',
+      requestId,
+      timestamp,
     });
   }
 }

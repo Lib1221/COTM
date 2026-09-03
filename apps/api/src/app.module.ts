@@ -1,5 +1,9 @@
-import { Module } from '@nestjs/common';
-import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import {
+  Module,
+  type MiddlewareConsumer,
+  type NestModule,
+} from '@nestjs/common';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -16,6 +20,10 @@ import { MaterialsModule } from './materials/materials.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { ProgressModule } from './progress/progress.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { RequestIdMiddleware } from './common/request-id.middleware';
+import { LoggingInterceptor } from './common/logging.interceptor';
+import { AllExceptionsFilter } from './common/all-exceptions.filter';
+import { PrismaExceptionFilter } from './common/prisma-exception.filter';
 
 @Module({
   imports: [
@@ -42,7 +50,14 @@ import { DashboardModule } from './dashboard/dashboard.module';
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
     { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_INTERCEPTOR, useClass: LoggingInterceptor },
     { provide: APP_INTERCEPTOR, useClass: AuditInterceptor },
+    { provide: APP_FILTER, useClass: PrismaExceptionFilter },
+    { provide: APP_FILTER, useClass: AllExceptionsFilter },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(RequestIdMiddleware).forRoutes('*');
+  }
+}

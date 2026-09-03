@@ -1,15 +1,17 @@
-# Mini Construction Management System
+# Liben CMS
 
-A full-stack construction management system for creating projects, defining BOQs, managing materials/inventory, and recording project progress.
+A production-ready construction management system for creating projects, defining BOQs, managing materials/inventory, and recording site progress.
+
+The web app includes a site-specific appearance system (Hi-Vis, Blueprint, Steel, Timber palettes with light/dark), a command palette, CSV export, and keyboard shortcuts.
 
 ## Tech Stack
 
-| Layer    | Technology                                                                                                                 |
-| -------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS 4, shadcn/ui (manual), TanStack Query, TanStack Table, React Hook Form, Zod |
-| Backend  | NestJS 11, REST API, Swagger/OpenAPI, class-validator                                                                      |
-| Database | PostgreSQL 16, Prisma ORM 6                                                                                                |
-| DevOps   | Docker Compose, pnpm workspaces, ESLint, Prettier                                                                          |
+| Layer    | Technology                                                                                                          |
+| -------- | ------------------------------------------------------------------------------------------------------------------- |
+| Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS 4, next-themes, TanStack Query, TanStack Table, React Hook Form, Zod |
+| Backend  | NestJS 11, REST API, Swagger/OpenAPI, Helmet, rate limiting, JWT auth, class-validator                              |
+| Database | PostgreSQL 16, Prisma ORM 6                                                                                         |
+| DevOps   | Docker Compose (non-root images), pnpm workspaces, GitHub Actions, Dependabot, ESLint, Prettier                     |
 
 ## Project Structure
 
@@ -99,9 +101,29 @@ pnpm docker:logs
 ```
 
 - Frontend: http://localhost:3000
-- API / Swagger: http://localhost:4000/api/docs
+- API / health: http://localhost:4000/api/health
+- Swagger: http://localhost:4000/api/docs (on in local Docker; set `ENABLE_SWAGGER=false` to hide it)
 
 `pnpm docker:migrate` is available if you need to apply migrations without rebuilding. Fresh `docker:up` already migrates automatically.
+
+For a real deployment, set a strong `JWT_SECRET` (32+ characters) in the environment. The compose default is only for local Docker.
+
+## Appearance and shortcuts
+
+- **Palettes:** Hi-Vis (default), Blueprint, Steel, Timber — plus system/light/dark color mode
+- **Settings:** `/settings` for density and reduced motion
+- **Command palette:** `⌘K` / `Ctrl+K`
+- **Jump keys:** `G` then `D` dashboard, `P` projects, `M` materials, `I` inventory, `S` settings
+- **CSV export** on projects, materials, and inventory tables
+
+## Production notes
+
+- API refuses to boot in `NODE_ENV=production` unless `JWT_SECRET` is a strong 32+ character value
+- `/api/health/live` is a liveness probe; `/api/health` and `/api/health/ready` ping the database
+- Request IDs are returned as `X-Request-Id` and included in error payloads
+- Swagger is off in production unless `ENABLE_SWAGGER=true`
+- Containers run as non-root users
+- Login is rate-limited (5 attempts / minute)
 
 ## API Endpoints
 
@@ -151,6 +173,14 @@ pnpm docker:logs
 | POST   | `/api/projects/:projectId/progress`     | Add a progress record    |
 | PATCH  | `/api/projects/:projectId/progress/:id` | Update a progress record |
 | DELETE | `/api/projects/:projectId/progress/:id` | Delete a progress record |
+
+### Health
+
+| Method | Path                | Description               |
+| ------ | ------------------- | ------------------------- |
+| GET    | `/api/health`       | Readiness (database ping) |
+| GET    | `/api/health/ready` | Same as `/api/health`     |
+| GET    | `/api/health/live`  | Liveness (no database)    |
 
 ### Dashboard
 

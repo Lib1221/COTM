@@ -3,26 +3,32 @@ import { ValidationPipe, Logger } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
-import { PrismaExceptionFilter } from './common/prisma-exception.filter';
+import { env } from './config/env';
 
 function corsOrigins(): boolean | string[] {
-  const raw = process.env.CORS_ORIGIN;
+  const raw = env.corsOrigin;
   if (!raw || raw === '*') {
-    return process.env.NODE_ENV === 'production'
-      ? ['http://localhost:3000']
-      : true;
+    return env.isProduction ? ['http://localhost:3000'] : true;
   }
   return raw.split(',').map((origin) => origin.trim());
 }
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: env.isProduction
+      ? ['error', 'warn', 'log']
+      : ['error', 'warn', 'log', 'debug', 'verbose'],
+  });
+
+  const http = app.getHttpAdapter().getInstance() as {
+    set?: (key: string, value: unknown) => void;
+  };
+  http.set?.('trust proxy', 1);
 
   app.setGlobalPrefix('api');
   app.use(
     helmet({
-      // Swagger UI needs inline scripts/styles; keep the rest of helmet on.
-      contentSecurityPolicy: false,
+      contentSecurityPolicy: env.enableSwagger ? false : undefined,
     }),
   );
   app.enableCors({ origin: corsOrigins(), credentials: true });
@@ -34,22 +40,26 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
     }),
   );
-  app.useGlobalFilters(new PrismaExceptionFilter());
+  if (env.enableSwagger) {
+    const config = new DocumentBuilder()
+      .setTitle('Liben CMS API')
+      .setDescription(
+        'REST API for projects, BOQ, materials, inventory, and progress.',
+      )
+      .setVersion('1.0.0')
+      .addBearerAuth()
+      .build();
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api/docs', app, document);
+  }
 
-  const config = new DocumentBuilder()
-    .setTitle('Construction Management System API')
-    .setDescription(
-      'REST API for projects, BOQ, materials, inventory, and progress.',
-    )
-    .setVersion('0.1.0')
-    .addBearerAuth()
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
-
-  const port = process.env.PORT ?? 4000;
-  await app.listen(port);
-  Logger.log(`API running on http://localhost:${port}/api`, 'Bootstrap');
-  Logger.log(`Swagger docs: http://localhost:${port}/api/docs`, 'Bootstrap');
+  await app.listen(env.port);
+  Logger.log(`API running on http://localhost:${env.port}/api`, 'Bootstrap');
+  if (env.enableSwagger) {
+    Logger.log(
+      `Swagger docs: http://localhost:${env.port}/api/docs`,
+      'Bootstrap',
+    );
+  }
 }
 void bootstrap();

@@ -4,12 +4,7 @@ import { use } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { MaterialForm } from '@/components/material-form';
 import { PageHeader } from '@/components/page-header';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { api } from '@/lib/api';
 import type { Material } from '@/lib/types';

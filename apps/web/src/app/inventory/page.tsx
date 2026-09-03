@@ -30,6 +30,7 @@ import { DataTable, TablePagination } from '@/components/data-table';
 import { PageHeader } from '@/components/page-header';
 import { useAuth } from '@/lib/auth-context';
 import { formatDate } from '@/lib/utils';
+import { ExportCsvButton } from '@/components/export-csv-button';
 
 const stockInSchema = z.object({
   materialId: z.string().min(1, 'Material is required'),
@@ -152,7 +153,21 @@ export default function InventoryPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Inventory" description="Track stock movements and transactions.">
+      <PageHeader
+        title="Inventory"
+        description="Track stock movements and transactions."
+      >
+        <ExportCsvButton
+          filename="inventory-transactions"
+          rows={(txData?.data ?? []).map((tx) => ({
+            date: tx.date,
+            type: tx.type,
+            material: tx.material?.name ?? '',
+            project: tx.project?.name ?? '',
+            quantity: tx.quantity,
+            reference: tx.reference ?? '',
+          }))}
+        />
         {can('create') && (
           <div className="flex gap-2">
             <Button

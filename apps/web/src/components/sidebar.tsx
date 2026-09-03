@@ -9,6 +9,7 @@ import {
   Boxes,
   HardHat,
   ScrollText,
+  Settings,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-context';
@@ -27,28 +28,32 @@ const navItems: NavItem[] = [
   { href: '/materials', label: 'Materials', icon: Package },
   { href: '/inventory', label: 'Inventory', icon: Boxes },
   { href: '/audit', label: 'Audit Log', icon: ScrollText, adminOnly: true },
+  { href: '/settings', label: 'Settings', icon: Settings },
 ];
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   const { can } = useAuth();
 
-  const visibleItems = navItems.filter((item) => !item.adminOnly || can('delete'));
+  const visibleItems = navItems.filter(
+    (item) => !item.adminOnly || can('delete'),
+  );
 
   return (
     <aside className="flex h-full w-60 flex-col bg-sidebar text-sidebar-foreground">
+      <div className="hazard-stripe" aria-hidden />
       <div className="flex h-16 items-center gap-2.5 border-b border-sidebar-border px-5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+        <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary text-primary-foreground">
           <HardHat className="h-5 w-5" />
         </div>
         <div className="flex flex-col leading-none">
           <span className="text-sm font-bold tracking-tight">Liben CMS</span>
-          <span className="text-[11px] text-muted-foreground">
-            Construction Mgmt
+          <span className="font-mono text-[11px] text-muted-foreground">
+            Site control
           </span>
         </div>
       </div>
-      <nav className="flex flex-1 flex-col gap-1 p-3">
+      <nav className="flex flex-1 flex-col gap-1 p-3" aria-label="Primary">
         {visibleItems.map((item) => {
           const active =
             item.href === '/'
@@ -60,8 +65,9 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
               key={item.href}
               href={item.href}
               onClick={onNavigate}
+              aria-current={active ? 'page' : undefined}
               className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                'flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors',
                 active
                   ? 'bg-sidebar-accent text-sidebar-accent-foreground'
                   : 'text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-foreground',
@@ -76,6 +82,9 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           );
         })}
       </nav>
+      <p className="px-5 py-4 font-mono text-[10px] text-muted-foreground">
+        v1.0 · yard desk
+      </p>
     </aside>
   );
 }

@@ -1,11 +1,6 @@
 import { ProjectForm } from '@/components/project-form';
 import { PageHeader } from '@/components/page-header';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function NewProjectPage() {
   return (

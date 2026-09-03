@@ -1,0 +1,17 @@
+{
+  "name": "Liben CMS",
+  "short_name": "Liben CMS",
+  "description": "Construction site control for projects, BOQ, materials, and progress.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f1ea",
+  "theme_color": "#d4a017",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

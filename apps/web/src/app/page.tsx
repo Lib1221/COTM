@@ -60,7 +60,12 @@ export default function DashboardPage() {
   }
 
   const statusData = [
-    { name: 'Planned', value: data.projects.total - data.projects.ongoing - data.projects.completed, key: 'PLANNED' },
+    {
+      name: 'Planned',
+      value:
+        data.projects.total - data.projects.ongoing - data.projects.completed,
+      key: 'PLANNED',
+    },
     { name: 'Ongoing', value: data.projects.ongoing, key: 'ONGOING' },
     { name: 'Completed', value: data.projects.completed, key: 'COMPLETED' },
   ].filter((d) => d.value > 0);
@@ -101,8 +106,8 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Dashboard"
-        description="Overview of projects, inventory, and performance."
+        title="Yard briefing"
+        description="Live view of projects, inventory, and performance."
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -217,10 +222,7 @@ export default function DashboardPage() {
                     paddingAngle={3}
                   >
                     {statusData.map((entry) => (
-                      <Cell
-                        key={entry.key}
-                        fill={STATUS_COLORS[entry.key]}
-                      />
+                      <Cell key={entry.key} fill={STATUS_COLORS[entry.key]} />
                     ))}
                   </Pie>
                   <Tooltip
@@ -260,7 +262,8 @@ export default function DashboardPage() {
               data.inventory.lowStock.map((m) => {
                 const pct = Math.min(
                   100,
-                  (Number(m.currentStock) / Math.max(Number(m.minimumStock), 1)) *
+                  (Number(m.currentStock) /
+                    Math.max(Number(m.minimumStock), 1)) *
                     100,
                 );
                 return (

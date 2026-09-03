@@ -19,6 +19,7 @@ import { StatusBadge } from '@/components/status-badge';
 import { DataTable, TablePagination } from '@/components/data-table';
 import { PageHeader } from '@/components/page-header';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
+import { ExportCsvButton } from '@/components/export-csv-button';
 
 const columnHelper = createColumnHelper<Project>();
 
@@ -110,7 +111,21 @@ export default function ProjectsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Projects" description="Create and manage construction projects.">
+      <PageHeader
+        title="Projects"
+        description="Create and manage construction projects."
+      >
+        <ExportCsvButton
+          filename="projects"
+          rows={(data?.data ?? []).map((project) => ({
+            code: project.code,
+            name: project.name,
+            client: project.clientName,
+            budget: project.budget,
+            progress: project.latestProgress ?? 0,
+            status: project.status,
+          }))}
+        />
         {can('create') && (
           <Link
             href="/projects/new"

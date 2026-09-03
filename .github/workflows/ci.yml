@@ -87,6 +87,7 @@ jobs:
     env:
       DATABASE_URL: postgresql://cms:cms@localhost:5432/cms_test?schema=public
       PORT: 4000
+      JWT_SECRET: test-jwt-secret-for-ci-only-not-prod
 
     steps:
       - name: Checkout

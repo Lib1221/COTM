@@ -1,16 +1,31 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Menu, LogOut, ChevronDown } from 'lucide-react';
+import { Menu, LogOut, ChevronDown, Settings } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { NotificationBell } from '@/components/notification-bell';
 
-export function Header({ onMenuClick }: { onMenuClick: () => void }) {
+export function Header({
+  onMenuClick,
+  onSearchClick,
+}: {
+  onMenuClick: () => void;
+  onSearchClick: () => void;
+}) {
   const { user, logout } = useAuth();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMenuOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   const initials = user
     ? user.name
@@ -33,7 +48,19 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
         <Menu className="h-5 w-5" />
       </Button>
 
-      <div className="ml-auto flex items-center gap-2">
+      <button
+        type="button"
+        onClick={onSearchClick}
+        className="hidden max-w-sm flex-1 items-center gap-2 rounded-md border bg-background px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent md:flex"
+      >
+        Search site records
+        <kbd className="ml-auto rounded border bg-muted px-1.5 py-0.5 text-[10px]">
+          ⌘K
+        </kbd>
+      </button>
+
+      <div className="ml-auto flex items-center gap-1">
+        <NotificationBell />
         <ThemeToggle />
 
         {user && (
@@ -72,10 +99,21 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
                     type="button"
                     onClick={() => {
                       setMenuOpen(false);
+                      router.push('/settings');
+                    }}
+                    className="mt-1 flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent"
+                  >
+                    <Settings className="h-4 w-4" />
+                    Settings
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenuOpen(false);
                       logout();
                       router.push('/login');
                     }}
-                    className="mt-1 flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent"
+                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent"
                   >
                     <LogOut className="h-4 w-4" />
                     Sign out

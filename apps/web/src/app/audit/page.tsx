@@ -9,10 +9,7 @@ import {
 } from '@tanstack/react-table';
 import { ScrollText } from 'lucide-react';
 import { api } from '@/lib/api';
-import type {
-  AuditLogEntry,
-  PaginatedResponse,
-} from '@/lib/types';
+import type { AuditLogEntry, PaginatedResponse } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { DataTable, TablePagination } from '@/components/data-table';
 import { PageHeader } from '@/components/page-header';
@@ -70,7 +67,9 @@ const columns = [
     cell: (i) => (
       <span
         className={
-          i.getValue() >= 400 ? 'font-medium text-destructive' : 'text-muted-foreground'
+          i.getValue() >= 400
+            ? 'font-medium text-destructive'
+            : 'text-muted-foreground'
         }
       >
         {i.getValue()}
@@ -98,9 +97,7 @@ export default function AuditLogPage() {
         pageSize: String(pageSize),
       });
       if (entityFilter) params.set('entity', entityFilter);
-      return api.get<PaginatedResponse<AuditLogEntry>>(
-        `/audit?${params}`,
-      );
+      return api.get<PaginatedResponse<AuditLogEntry>>(`/audit?${params}`);
     },
   });
 

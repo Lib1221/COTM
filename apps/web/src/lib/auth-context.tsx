@@ -15,7 +15,8 @@ import type { AuthUser, AuthResponse } from './types';
 const TOKEN_KEY = 'cms.token';
 const USER_KEY = 'cms.user';
 
-export type Permission = 'read' | 'create' | 'update' | 'delete' | 'manageUsers';
+export type Permission =
+  'read' | 'create' | 'update' | 'delete' | 'manageUsers';
 
 const ROLE_RANK: Record<AuthUser['role'], number> = {
   VIEWER: 0,
@@ -31,7 +32,10 @@ const PERMISSION_MIN_ROLE: Record<Permission, AuthUser['role']> = {
   manageUsers: 'ADMIN',
 };
 
-export function can(role: AuthUser['role'] | null | undefined, permission: Permission): boolean {
+export function can(
+  role: AuthUser['role'] | null | undefined,
+  permission: Permission,
+): boolean {
   if (!role) return false;
   return ROLE_RANK[role] >= ROLE_RANK[PERMISSION_MIN_ROLE[permission]];
 }
@@ -44,11 +48,7 @@ type AuthState = {
 
 type AuthContextValue = AuthState & {
   login: (email: string, password: string) => Promise<void>;
-  register: (
-    email: string,
-    name: string,
-    password: string,
-  ) => Promise<void>;
+  register: (email: string, name: string, password: string) => Promise<void>;
   logout: () => void;
   can: (permission: Permission) => boolean;
 };
@@ -90,7 +90,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(
     async (email: string, password: string) => {
-      const res = await api.post<AuthResponse>('/auth/login', { email, password });
+      const res = await api.post<AuthResponse>('/auth/login', {
+        email,
+        password,
+      });
       persist(res);
     },
     [persist],

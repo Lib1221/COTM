@@ -6,10 +6,37 @@ import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 import { PrismaService } from './../src/prisma/prisma.service';
 import { PrismaExceptionFilter } from './../src/common/prisma-exception.filter';
+import * as bcrypt from 'bcryptjs';
+import { UserRole } from '@prisma/client';
+
+const E2E_EMAIL = 'e2e.admin@cms.test';
+const E2E_PASSWORD = 'e2e-admin-pass-123';
 
 describe('Construction Management System (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
+  let accessToken: string;
+
+  function asAdmin() {
+    return {
+      get: (url: string) =>
+        request(app.getHttpServer())
+          .get(url)
+          .auth(accessToken, { type: 'bearer' }),
+      post: (url: string) =>
+        request(app.getHttpServer())
+          .post(url)
+          .auth(accessToken, { type: 'bearer' }),
+      patch: (url: string) =>
+        request(app.getHttpServer())
+          .patch(url)
+          .auth(accessToken, { type: 'bearer' }),
+      delete: (url: string) =>
+        request(app.getHttpServer())
+          .delete(url)
+          .auth(accessToken, { type: 'bearer' }),
+    };
+  }
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -28,6 +55,24 @@ describe('Construction Management System (e2e)', () => {
     app.useGlobalFilters(new PrismaExceptionFilter());
     await app.init();
     prisma = app.get(PrismaService);
+
+    const passwordHash = await bcrypt.hash(E2E_PASSWORD, 10);
+    await prisma.user.upsert({
+      where: { email: E2E_EMAIL },
+      update: { passwordHash, role: UserRole.ADMIN },
+      create: {
+        email: E2E_EMAIL,
+        name: 'E2E Admin',
+        passwordHash,
+        role: UserRole.ADMIN,
+      },
+    });
+
+    const login = await request(app.getHttpServer())
+      .post('/api/auth/login')
+      .send({ email: E2E_EMAIL, password: E2E_PASSWORD })
+      .expect(200);
+    accessToken = login.body.accessToken as string;
   });
 
   afterAll(async () => {
@@ -48,13 +93,23 @@ describe('Construction Management System (e2e)', () => {
           expect(res.body.status).toBe('ok');
         });
     });
+
+    it('GET /api/health/live should return ok without a database dependency in the payload', () => {
+      return request(app.getHttpServer())
+        .get('/api/health/live')
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.status).toBe('ok');
+          expect(res.body.check).toBe('live');
+        });
+    });
   });
 
   describe('Projects', () => {
     let projectId: string;
 
     it('POST /api/projects should create a project', async () => {
-      const res = await request(app.getHttpServer())
+      const res = await asAdmin()
         .post('/api/projects')
         .send({
           name: 'E2E Test Project',
@@ -75,7 +130,7 @@ describe('Construction Management System (e2e)', () => {
     });
 
     it('POST /api/projects should reject duplicate code', () => {
-      return request(app.getHttpServer())
+      return asAdmin()
         .post('/api/projects')
         .send({
           name: 'Duplicate Project',
@@ -89,14 +144,14 @@ describe('Construction Management System (e2e)', () => {
     });
 
     it('POST /api/projects should validate required fields', () => {
-      return request(app.getHttpServer())
+      return asAdmin()
         .post('/api/projects')
         .send({ name: 'Incomplete' })
         .expect(400);
     });
 
     it('GET /api/projects/:id should return project details', () => {
-      return request(app.getHttpServer())
+      return asAdmin()
         .get(`/api/projects/${projectId}`)
         .expect(200)
         .expect((res) => {
@@ -107,7 +162,7 @@ describe('Construction Management System (e2e)', () => {
     });
 
     it('PATCH /api/projects/:id should update a project', async () => {
-      const res = await request(app.getHttpServer())
+      const res = await asAdmin()
         .patch(`/api/projects/${projectId}`)
         .send({ status: 'ONGOING', location: 'Updated Location' })
         .expect(200);
@@ -116,7 +171,7 @@ describe('Construction Management System (e2e)', () => {
     });
 
     it('GET /api/projects should support pagination', () => {
-      return request(app.getHttpServer())
+      return asAdmin()
         .get('/api/projects?page=1&pageSize=2')
         .expect(200)
         .expect((res) => {
@@ -130,7 +185,7 @@ describe('Construction Management System (e2e)', () => {
       let boqItemId: string;
 
       it('POST /api/projects/:projectId/boq should calculate total = qty x unitPrice', async () => {
-        const res = await request(app.getHttpServer())
+        const res = await asAdmin()
           .post(`/api/projects/${projectId}/boq`)
           .send({
             description: 'Concrete work (m³)',
@@ -145,7 +200,7 @@ describe('Construction Management System (e2e)', () => {
       });
 
       it('PATCH /api/projects/:projectId/boq/:id should recalculate total', async () => {
-        const res = await request(app.getHttpServer())
+        const res = await asAdmin()
           .patch(`/api/projects/${projectId}/boq/${boqItemId}`)
           .send({ quantity: 150 })
           .expect(200);
@@ -154,7 +209,7 @@ describe('Construction Management System (e2e)', () => {
       });
 
       it('GET /api/projects/:projectId/boq should return total value', () => {
-        return request(app.getHttpServer())
+        return asAdmin()
           .get(`/api/projects/${projectId}/boq`)
           .expect(200)
           .expect((res) => {
@@ -164,7 +219,7 @@ describe('Construction Management System (e2e)', () => {
       });
 
       it('PATCH /api/projects/:other/boq/:id should reject cross-project update', async () => {
-        const other = await request(app.getHttpServer())
+        const other = await asAdmin()
           .post('/api/projects')
           .send({
             name: 'Other Project',
@@ -175,14 +230,14 @@ describe('Construction Management System (e2e)', () => {
             budget: 100000,
           })
           .expect(201);
-        return request(app.getHttpServer())
+        return asAdmin()
           .patch(`/api/projects/${other.body.id}/boq/${boqItemId}`)
           .send({ quantity: 1 })
           .expect(404);
       });
 
       it('DELETE /api/projects/:projectId/boq/:id should remove the BOQ item', () => {
-        return request(app.getHttpServer())
+        return asAdmin()
           .delete(`/api/projects/${projectId}/boq/${boqItemId}`)
           .expect(204);
       });
@@ -192,7 +247,7 @@ describe('Construction Management System (e2e)', () => {
       let progressId: string;
 
       it('POST /api/projects/:projectId/progress should record progress', async () => {
-        const res = await request(app.getHttpServer())
+        const res = await asAdmin()
           .post(`/api/projects/${projectId}/progress`)
           .send({
             date: '2026-08-20',
@@ -207,7 +262,7 @@ describe('Construction Management System (e2e)', () => {
       });
 
       it('GET /api/projects/:id should show latest progress', () => {
-        return request(app.getHttpServer())
+        return asAdmin()
           .get(`/api/projects/${projectId}`)
           .expect(200)
           .expect((res) => {
@@ -216,7 +271,7 @@ describe('Construction Management System (e2e)', () => {
       });
 
       it('POST /api/projects/:projectId/progress should reject % > 100', () => {
-        return request(app.getHttpServer())
+        return asAdmin()
           .post(`/api/projects/${projectId}/progress`)
           .send({
             date: '2026-08-21',
@@ -227,7 +282,7 @@ describe('Construction Management System (e2e)', () => {
       });
 
       it('PATCH /api/projects/:projectId/progress/:id should update the record', async () => {
-        const res = await request(app.getHttpServer())
+        const res = await asAdmin()
           .patch(`/api/projects/${projectId}/progress/${progressId}`)
           .send({ progressPercent: 50, description: 'Updated description' })
           .expect(200);
@@ -236,7 +291,7 @@ describe('Construction Management System (e2e)', () => {
       });
 
       it('PATCH /api/projects/:other/progress/:id should reject cross-project update', async () => {
-        const other = await request(app.getHttpServer())
+        const other = await asAdmin()
           .post('/api/projects')
           .send({
             name: 'Other Progress Project',
@@ -247,23 +302,21 @@ describe('Construction Management System (e2e)', () => {
             budget: 100000,
           })
           .expect(201);
-        return request(app.getHttpServer())
+        return asAdmin()
           .patch(`/api/projects/${other.body.id}/progress/${progressId}`)
           .send({ progressPercent: 10 })
           .expect(404);
       });
 
       it('DELETE /api/projects/:projectId/progress/:id should remove the record', () => {
-        return request(app.getHttpServer())
+        return asAdmin()
           .delete(`/api/projects/${projectId}/progress/${progressId}`)
           .expect(204);
       });
     });
 
     it('DELETE /api/projects/:id should delete the project', () => {
-      return request(app.getHttpServer())
-        .delete(`/api/projects/${projectId}`)
-        .expect(204);
+      return asAdmin().delete(`/api/projects/${projectId}`).expect(204);
     });
   });
 
@@ -272,7 +325,7 @@ describe('Construction Management System (e2e)', () => {
     let projectId: string;
 
     beforeAll(async () => {
-      const material = await request(app.getHttpServer())
+      const material = await asAdmin()
         .post('/api/materials')
         .send({
           name: 'Test Cement',
@@ -284,7 +337,7 @@ describe('Construction Management System (e2e)', () => {
         .expect(201);
       materialId = material.body.id;
 
-      const project = await request(app.getHttpServer())
+      const project = await asAdmin()
         .post('/api/projects')
         .send({
           name: 'Inventory Test Project',
@@ -299,7 +352,7 @@ describe('Construction Management System (e2e)', () => {
     });
 
     it('POST /api/inventory/stock-in should increase current stock', async () => {
-      const res = await request(app.getHttpServer())
+      const res = await asAdmin()
         .post('/api/inventory/stock-in')
         .send({
           materialId,
@@ -313,7 +366,7 @@ describe('Construction Management System (e2e)', () => {
     });
 
     it('POST /api/inventory/stock-out should decrease current stock', async () => {
-      const res = await request(app.getHttpServer())
+      const res = await asAdmin()
         .post('/api/inventory/stock-out')
         .send({
           materialId,
@@ -328,7 +381,7 @@ describe('Construction Management System (e2e)', () => {
     });
 
     it('POST /api/inventory/stock-out should reject quantity > available stock', () => {
-      return request(app.getHttpServer())
+      return asAdmin()
         .post('/api/inventory/stock-out')
         .send({
           materialId,
@@ -343,12 +396,12 @@ describe('Construction Management System (e2e)', () => {
     });
 
     it('GET /api/materials/low-stock should list low-stock materials', async () => {
-      await request(app.getHttpServer())
+      await asAdmin()
         .patch(`/api/materials/${materialId}`)
         .send({ minimumStock: 200 })
         .expect(200);
 
-      return request(app.getHttpServer())
+      return asAdmin()
         .get('/api/materials/low-stock')
         .expect(200)
         .expect((res) => {
@@ -357,7 +410,7 @@ describe('Construction Management System (e2e)', () => {
     });
 
     it('GET /api/materials/:id should return a material', () => {
-      return request(app.getHttpServer())
+      return asAdmin()
         .get(`/api/materials/${materialId}`)
         .expect(200)
         .expect((res) => {
@@ -367,12 +420,12 @@ describe('Construction Management System (e2e)', () => {
     });
 
     it('PATCH /api/materials/:id should update name without changing stock', async () => {
-      const before = await request(app.getHttpServer())
+      const before = await asAdmin()
         .get(`/api/materials/${materialId}`)
         .expect(200);
       const stockBefore = Number(before.body.currentStock);
 
-      const res = await request(app.getHttpServer())
+      const res = await asAdmin()
         .patch(`/api/materials/${materialId}`)
         .send({ name: 'Test Cement Updated' })
         .expect(200);
@@ -381,14 +434,14 @@ describe('Construction Management System (e2e)', () => {
     });
 
     it('PATCH /api/materials/:id should reject direct currentStock updates', () => {
-      return request(app.getHttpServer())
+      return asAdmin()
         .patch(`/api/materials/${materialId}`)
         .send({ currentStock: 500 })
         .expect(400);
     });
 
     it('POST /api/projects should reject endDate before startDate', () => {
-      return request(app.getHttpServer())
+      return asAdmin()
         .post('/api/projects')
         .send({
           name: 'Invalid Dates',
@@ -403,7 +456,7 @@ describe('Construction Management System (e2e)', () => {
     });
 
     it('GET /api/materials should support search and pagination', () => {
-      return request(app.getHttpServer())
+      return asAdmin()
         .get('/api/materials?search=Cement&page=1&pageSize=5')
         .expect(200)
         .expect((res) => {
@@ -417,7 +470,7 @@ describe('Construction Management System (e2e)', () => {
     });
 
     it('GET /api/inventory/transactions should support filter and pagination', () => {
-      return request(app.getHttpServer())
+      return asAdmin()
         .get(
           `/api/inventory/transactions?materialId=${materialId}&page=1&pageSize=5`,
         )
@@ -434,15 +487,13 @@ describe('Construction Management System (e2e)', () => {
     });
 
     it('DELETE /api/materials/:id should reject when referenced by transactions', () => {
-      return request(app.getHttpServer())
-        .delete(`/api/materials/${materialId}`)
-        .expect(409);
+      return asAdmin().delete(`/api/materials/${materialId}`).expect(409);
     });
   });
 
   describe('Dashboard', () => {
     it('GET /api/dashboard should return overview', () => {
-      return request(app.getHttpServer())
+      return asAdmin()
         .get('/api/dashboard')
         .expect(200)
         .expect((res) => {
