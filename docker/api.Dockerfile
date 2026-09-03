@@ -1,5 +1,5 @@
 # ---- builder ----
-FROM node:22-bookworm-slim AS builder
+FROM node:26-bookworm-slim AS builder
 WORKDIR /app
 RUN npm install -g pnpm@11.22.0
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml .npmrc ./
@@ -12,7 +12,7 @@ RUN pnpm --filter @cms/db exec prisma generate
 RUN pnpm --filter @cms/api run build
 
 # ---- runner ----
-FROM node:22-bookworm-slim AS runner
+FROM node:26-bookworm-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=4000
