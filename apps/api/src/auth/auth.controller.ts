@@ -7,10 +7,13 @@ import {
   Post,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { UserRole } from '@prisma/client';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { Public } from './decorators/public.decorator';
+import { Roles } from './decorators/roles.decorator';
 import {
   CurrentUser,
   type AuthUser,
@@ -21,16 +24,18 @@ import {
 export class AuthController {
   constructor(private readonly service: AuthService) {}
 
-  @Public()
+  @Roles(UserRole.ADMIN)
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Register a new user' })
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Register a new user (admin only)' })
   register(@Body() dto: RegisterDto) {
     return this.service.register(dto);
   }
 
   @Public()
   @Post('login')
+  @Throttle({ default: { ttl: 60_000, limit: 5 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Login and receive a JWT access token' })
   login(@Body() dto: LoginDto) {

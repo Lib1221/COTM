@@ -16,9 +16,11 @@ import {
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
+import { UserRole } from '@prisma/client';
 import { ProgressService } from './progress.service';
 import { CreateProgressDto } from './dto/create-progress.dto';
 import { UpdateProgressDto } from './dto/update-progress.dto';
+import { Roles } from '../auth/decorators/roles.decorator';
 
 @ApiTags('progress')
 @Controller('projects/:projectId/progress')
@@ -26,6 +28,7 @@ export class ProgressController {
   constructor(private readonly service: ProgressService) {}
 
   @Get()
+  @Roles(UserRole.VIEWER, UserRole.MANAGER, UserRole.ADMIN)
   @ApiOperation({ summary: 'List progress records for a project' })
   @ApiParam({ name: 'projectId', description: 'Project id' })
   list(@Param('projectId') projectId: string) {
@@ -33,6 +36,7 @@ export class ProgressController {
   }
 
   @Post()
+  @Roles(UserRole.MANAGER, UserRole.ADMIN)
   @ApiOperation({ summary: 'Add a progress record to a project' })
   @ApiParam({ name: 'projectId', description: 'Project id' })
   @ApiCreatedResponse({ description: 'Progress record created' })
@@ -44,6 +48,7 @@ export class ProgressController {
   }
 
   @Patch(':id')
+  @Roles(UserRole.MANAGER, UserRole.ADMIN)
   @ApiOperation({ summary: 'Update a progress record' })
   @ApiParam({ name: 'projectId', description: 'Project id' })
   @ApiParam({ name: 'id', description: 'Progress record id' })
@@ -57,6 +62,7 @@ export class ProgressController {
   }
 
   @Delete(':id')
+  @Roles(UserRole.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete a progress record' })
   @ApiParam({ name: 'projectId', description: 'Project id' })

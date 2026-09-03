@@ -19,10 +19,12 @@ import {
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
+import { UserRole } from '@prisma/client';
 import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { QueryProjectDto } from './dto/query-project.dto';
+import { Roles } from '../auth/decorators/roles.decorator';
 
 @ApiTags('projects')
 @Controller('projects')
@@ -30,6 +32,7 @@ export class ProjectsController {
   constructor(private readonly service: ProjectsService) {}
 
   @Get()
+  @Roles(UserRole.VIEWER, UserRole.MANAGER, UserRole.ADMIN)
   @ApiOperation({ summary: 'List projects (search, filter, sort, pagination)' })
   @ApiOkResponse({ description: 'Paginated project list' })
   findAll(@Query() query: QueryProjectDto) {
@@ -37,6 +40,7 @@ export class ProjectsController {
   }
 
   @Get(':id')
+  @Roles(UserRole.VIEWER, UserRole.MANAGER, UserRole.ADMIN)
   @ApiOperation({
     summary: 'Get project details (incl. BOQ, progress, inventory)',
   })
@@ -48,6 +52,7 @@ export class ProjectsController {
   }
 
   @Post()
+  @Roles(UserRole.MANAGER, UserRole.ADMIN)
   @ApiOperation({ summary: 'Create a project' })
   @ApiCreatedResponse({ description: 'Project created' })
   @ApiBadRequestResponse({ description: 'Validation failed' })
@@ -56,6 +61,7 @@ export class ProjectsController {
   }
 
   @Patch(':id')
+  @Roles(UserRole.MANAGER, UserRole.ADMIN)
   @ApiOperation({ summary: 'Update a project' })
   @ApiParam({ name: 'id', description: 'Project id' })
   @ApiNotFoundResponse({ description: 'Project not found' })
@@ -64,6 +70,7 @@ export class ProjectsController {
   }
 
   @Delete(':id')
+  @Roles(UserRole.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete a project' })
   @ApiParam({ name: 'id', description: 'Project id' })
