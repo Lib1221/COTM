@@ -7,7 +7,7 @@ import { Sidebar } from '@/components/sidebar';
 import { Header } from '@/components/header';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 
-const PUBLIC_ROUTES = ['/login', '/register'];
+const PUBLIC_ROUTES = ['/login'];
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { user, isLoading } = useAuth();

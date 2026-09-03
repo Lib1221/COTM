@@ -1,5 +1,6 @@
 'use client';
 
+import * as React from 'react';
 import { flexRender, type Table as TanStackTable } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,8 +23,8 @@ export function DataTable<T>({
   table: TanStackTable<T>;
   isLoading?: boolean;
   isError?: boolean;
-  errorMessage?: string;
-  emptyMessage?: string;
+  errorMessage?: React.ReactNode;
+  emptyMessage?: React.ReactNode;
   columnCount: number;
 }) {
   const rows = table.getRowModel().rows;

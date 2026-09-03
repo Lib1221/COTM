@@ -28,6 +28,7 @@ import { Select } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DataTable, TablePagination } from '@/components/data-table';
 import { PageHeader } from '@/components/page-header';
+import { useAuth } from '@/lib/auth-context';
 import { formatDate } from '@/lib/utils';
 
 const stockInSchema = z.object({
@@ -85,6 +86,7 @@ const columns = [
 ];
 
 export default function InventoryPage() {
+  const { can } = useAuth();
   const [showStockIn, setShowStockIn] = useState(false);
   const [showStockOut, setShowStockOut] = useState(false);
   const [search, setSearch] = useState('');
@@ -151,25 +153,27 @@ export default function InventoryPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Inventory" description="Track stock movements and transactions.">
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => {
-              setShowStockIn(!showStockIn);
-              setShowStockOut(false);
-            }}
-          >
-            Stock In
-          </Button>
-          <Button
-            onClick={() => {
-              setShowStockOut(!showStockOut);
-              setShowStockIn(false);
-            }}
-          >
-            Stock Out
-          </Button>
-        </div>
+        {can('create') && (
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowStockIn(!showStockIn);
+                setShowStockOut(false);
+              }}
+            >
+              Stock In
+            </Button>
+            <Button
+              onClick={() => {
+                setShowStockOut(!showStockOut);
+                setShowStockIn(false);
+              }}
+            >
+              Stock Out
+            </Button>
+          </div>
+        )}
       </PageHeader>
 
       {showStockIn && (

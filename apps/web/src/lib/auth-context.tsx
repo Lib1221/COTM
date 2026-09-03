@@ -15,6 +15,27 @@ import type { AuthUser, AuthResponse } from './types';
 const TOKEN_KEY = 'cms.token';
 const USER_KEY = 'cms.user';
 
+export type Permission = 'read' | 'create' | 'update' | 'delete' | 'manageUsers';
+
+const ROLE_RANK: Record<AuthUser['role'], number> = {
+  VIEWER: 0,
+  MANAGER: 1,
+  ADMIN: 2,
+};
+
+const PERMISSION_MIN_ROLE: Record<Permission, AuthUser['role']> = {
+  read: 'VIEWER',
+  create: 'MANAGER',
+  update: 'MANAGER',
+  delete: 'ADMIN',
+  manageUsers: 'ADMIN',
+};
+
+export function can(role: AuthUser['role'] | null | undefined, permission: Permission): boolean {
+  if (!role) return false;
+  return ROLE_RANK[role] >= ROLE_RANK[PERMISSION_MIN_ROLE[permission]];
+}
+
 type AuthState = {
   user: AuthUser | null;
   token: string | null;
@@ -29,6 +50,7 @@ type AuthContextValue = AuthState & {
     password: string,
   ) => Promise<void>;
   logout: () => void;
+  can: (permission: Permission) => boolean;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -93,7 +115,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ ...state, login, register, logout }),
+    () => ({
+      ...state,
+      login,
+      register,
+      logout,
+      can: (permission: Permission) => can(state.user?.role, permission),
+    }),
     [state, login, register, logout],
   );
 

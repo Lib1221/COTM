@@ -19,9 +19,11 @@ import { Badge } from '@/components/ui/badge';
 import { DataTable, TablePagination } from '@/components/data-table';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { PageHeader } from '@/components/page-header';
+import { useAuth } from '@/lib/auth-context';
 import { cn } from '@/lib/utils';
 
 export default function MaterialsPage() {
+  const { can } = useAuth();
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search);
   const [lowStockOnly, setLowStockOnly] = useState(false);
@@ -105,20 +107,24 @@ export default function MaterialsPage() {
       enableSorting: false,
       cell: (i) => (
         <div className="flex gap-1">
-          <Link
-            href={`/materials/${i.row.original.id}/edit`}
-            className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}
-          >
-            Edit
-          </Link>
-          <Button
-            variant="ghost"
-            size="sm"
-            disabled={deleteMutation.isPending}
-            onClick={() => setDeleteMaterial(i.row.original)}
-          >
-            Delete
-          </Button>
+          {can('update') && (
+            <Link
+              href={`/materials/${i.row.original.id}/edit`}
+              className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}
+            >
+              Edit
+            </Link>
+          )}
+          {can('delete') && (
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={deleteMutation.isPending}
+              onClick={() => setDeleteMaterial(i.row.original)}
+            >
+              Delete
+            </Button>
+          )}
         </div>
       ),
     }),
@@ -139,12 +145,14 @@ export default function MaterialsPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Materials" description="Manage your material catalog and stock levels.">
-        <Link
-          href="/materials/new"
-          className={cn(buttonVariants({ variant: 'default' }))}
-        >
-          New Material
-        </Link>
+        {can('create') && (
+          <Link
+            href="/materials/new"
+            className={cn(buttonVariants({ variant: 'default' }))}
+          >
+            New Material
+          </Link>
+        )}
       </PageHeader>
 
       <div className="flex flex-wrap items-center gap-4">

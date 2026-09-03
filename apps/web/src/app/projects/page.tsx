@@ -11,6 +11,7 @@ import {
 } from '@tanstack/react-table';
 import { api } from '@/lib/api';
 import { useDebouncedValue } from '@/lib/use-debounce';
+import { useAuth } from '@/lib/auth-context';
 import type { Project, PaginatedResponse, ProjectStatus } from '@/lib/types';
 import { buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -67,6 +68,7 @@ const columns = [
 ];
 
 export default function ProjectsPage() {
+  const { can } = useAuth();
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search);
   const [sorting, setSorting] = useState<SortingState>([
@@ -109,12 +111,14 @@ export default function ProjectsPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Projects" description="Create and manage construction projects.">
-        <Link
-          href="/projects/new"
-          className={cn(buttonVariants({ variant: 'default' }))}
-        >
-          New Project
-        </Link>
+        {can('create') && (
+          <Link
+            href="/projects/new"
+            className={cn(buttonVariants({ variant: 'default' }))}
+          >
+            New Project
+          </Link>
+        )}
       </PageHeader>
 
       <Input

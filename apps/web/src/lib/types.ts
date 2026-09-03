@@ -12,6 +12,20 @@ export interface AuthResponse {
   user: AuthUser;
 }
 
+export interface AuditLogEntry {
+  id: string;
+  userId: string | null;
+  action: string;
+  entity: string;
+  entityId: string | null;
+  method: string;
+  path: string;
+  status: number;
+  ip: string | null;
+  metadata: unknown;
+  createdAt: string;
+}
+
 export type ProjectStatus = 'PLANNED' | 'ONGOING' | 'COMPLETED';
 
 export interface Project {

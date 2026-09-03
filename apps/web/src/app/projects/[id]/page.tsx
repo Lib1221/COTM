@@ -15,6 +15,7 @@ import {
 } from '@tanstack/react-table';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
+import { useAuth } from '@/lib/auth-context';
 import { ArrowLeft, Pencil, Trash2 } from 'lucide-react';
 import type { ProjectDetail, BoqItem, ProgressRecord } from '@/lib/types';
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -48,6 +49,7 @@ export default function ProjectDetailPage({
 function ProjectDetail({ id }: { id: string }) {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { can } = useAuth();
   const [boqDialog, setBoqDialog] = React.useState<{
     open: boolean;
     item?: BoqItem;
@@ -124,22 +126,26 @@ function ProjectDetail({ id }: { id: string }) {
           <StatusBadge status={project.status} />
         </div>
         <div className="flex gap-2">
-          <Link
-            href={`/projects/${id}/edit`}
-            className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
-          >
-            <Pencil className="h-4 w-4" />
-            Edit
-          </Link>
-          <Button
-            variant="destructive"
-            size="sm"
-            disabled={deleteMutation.isPending}
-            onClick={() => setDeleteProject(true)}
-          >
-            <Trash2 className="h-4 w-4" />
-            {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
-          </Button>
+          {can('update') && (
+            <Link
+              href={`/projects/${id}/edit`}
+              className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
+            >
+              <Pencil className="h-4 w-4" />
+              Edit
+            </Link>
+          )}
+          {can('delete') && (
+            <Button
+              variant="destructive"
+              size="sm"
+              disabled={deleteMutation.isPending}
+              onClick={() => setDeleteProject(true)}
+            >
+              <Trash2 className="h-4 w-4" />
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -304,6 +310,7 @@ function BoqSection({
   onEdit: (item: BoqItem) => void;
 }) {
   const queryClient = useQueryClient();
+  const { can } = useAuth();
   const [globalFilter, setGlobalFilter] = React.useState('');
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [deleteItem, setDeleteItem] = React.useState<BoqItem | null>(null);
@@ -352,26 +359,30 @@ function BoqSection({
         enableSorting: false,
         cell: (i) => (
           <div className="flex gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onEdit(i.row.original)}
-            >
-              Edit
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled={deleteMutation.isPending}
-              onClick={() => setDeleteItem(i.row.original)}
-            >
-              Delete
-            </Button>
+            {can('update') && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onEdit(i.row.original)}
+              >
+                Edit
+              </Button>
+            )}
+            {can('delete') && (
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={deleteMutation.isPending}
+                onClick={() => setDeleteItem(i.row.original)}
+              >
+                Delete
+              </Button>
+            )}
           </div>
         ),
       }),
     ],
-    [columnHelper, deleteMutation, onEdit],
+    [columnHelper, deleteMutation, onEdit, can],
   );
 
   const table = useReactTable({
@@ -394,9 +405,11 @@ function BoqSection({
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <CardTitle>BOQ Items</CardTitle>
-          <Button size="sm" onClick={onAdd}>
-            Add BOQ Item
-          </Button>
+          {can('create') && (
+            <Button size="sm" onClick={onAdd}>
+              Add BOQ Item
+            </Button>
+          )}
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -449,6 +462,7 @@ function ProgressSection({
   onEdit: (record: ProgressRecord) => void;
 }) {
   const queryClient = useQueryClient();
+  const { can } = useAuth();
   const [deleteRecord, setDeleteRecord] = React.useState<ProgressRecord | null>(
     null,
   );
@@ -470,9 +484,11 @@ function ProgressSection({
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Progress Records</CardTitle>
-          <Button size="sm" onClick={onAdd}>
-            Add Progress
-          </Button>
+          {can('create') && (
+            <Button size="sm" onClick={onAdd}>
+              Add Progress
+            </Button>
+          )}
         </div>
       </CardHeader>
       <CardContent>
@@ -493,17 +509,21 @@ function ProgressSection({
                     <span className="text-xs text-muted-foreground">
                       {formatDate(r.date)}
                     </span>
-                    <Button variant="ghost" size="sm" onClick={() => onEdit(r)}>
-                      Edit
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      disabled={deleteMutation.isPending}
-                      onClick={() => setDeleteRecord(r)}
-                    >
-                      Delete
-                    </Button>
+                    {can('update') && (
+                      <Button variant="ghost" size="sm" onClick={() => onEdit(r)}>
+                        Edit
+                      </Button>
+                    )}
+                    {can('delete') && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={deleteMutation.isPending}
+                        onClick={() => setDeleteRecord(r)}
+                      >
+                        Delete
+                      </Button>
+                    )}
                   </div>
                 </div>
                 {r.notes && (

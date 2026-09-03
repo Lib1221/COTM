@@ -8,18 +8,32 @@ import {
   Package,
   Boxes,
   HardHat,
+  ScrollText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/lib/auth-context';
+import type { LucideIcon } from 'lucide-react';
 
-const navItems = [
+type NavItem = {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  adminOnly?: boolean;
+};
+
+const navItems: NavItem[] = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/projects', label: 'Projects', icon: FolderKanban },
   { href: '/materials', label: 'Materials', icon: Package },
   { href: '/inventory', label: 'Inventory', icon: Boxes },
+  { href: '/audit', label: 'Audit Log', icon: ScrollText, adminOnly: true },
 ];
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
+  const { can } = useAuth();
+
+  const visibleItems = navItems.filter((item) => !item.adminOnly || can('delete'));
 
   return (
     <aside className="flex h-full w-60 flex-col bg-sidebar text-sidebar-foreground">
@@ -35,7 +49,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         </div>
       </div>
       <nav className="flex flex-1 flex-col gap-1 p-3">
-        {navItems.map((item) => {
+        {visibleItems.map((item) => {
           const active =
             item.href === '/'
               ? pathname === '/'
