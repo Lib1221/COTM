@@ -1,5 +1,5 @@
 # ---- builder ----
-FROM node:22-bookworm-slim AS builder
+FROM node:26-bookworm-slim AS builder
 WORKDIR /app
 RUN npm install -g pnpm@11.22.0
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml .npmrc ./
@@ -13,7 +13,7 @@ ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 RUN pnpm --filter @cms/web run build
 
 # ---- runner (Next.js standalone) ----
-FROM node:22-bookworm-slim AS runner
+FROM node:26-bookworm-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
