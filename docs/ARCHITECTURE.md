@@ -4,13 +4,13 @@ Liben CMS is a pnpm monorepo with a Next.js frontend, a NestJS REST API, and a s
 
 ## Components
 
-| Component | Location | Responsibility |
-| --------- | -------- | -------------- |
-| Web app | `apps/web` | Next.js 16 / React 19 UI: dashboard, projects, BOQs, materials, inventory, settings. Uses TanStack Query for server state, TanStack Table for grids, React Hook Form + Zod for forms, next-themes for palettes and light/dark. |
-| API | `apps/api` | NestJS 11 REST API on port 4000 under `/api`. JWT auth, Helmet, rate limiting, class-validator DTOs, Swagger at `/api/docs`. Health probes at `/api/health`, `/api/health/live`, `/api/health/ready`. |
-| Database package | `packages/db` | Prisma schema, generated client, migrations, and the idempotent seed script shared by both apps. |
-| Docker | `docker/` | `docker-compose.yml` (postgres, api, web), `api.Dockerfile`, `web.Dockerfile`. Images run as non-root; the API image applies migrations on boot. |
-| CI | `.github/workflows/ci.yml`, `pages.yml` | Lint, typecheck, build on pull requests; static export to GitHub Pages. |
+| Component        | Location                                | Responsibility                                                                                                                                                                                                                 |
+| ---------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Web app          | `apps/web`                              | Next.js 16 / React 19 UI: dashboard, projects, BOQs, materials, inventory, settings. Uses TanStack Query for server state, TanStack Table for grids, React Hook Form + Zod for forms, next-themes for palettes and light/dark. |
+| API              | `apps/api`                              | NestJS 11 REST API on port 4000 under `/api`. JWT auth, Helmet, rate limiting, class-validator DTOs, Swagger at `/api/docs`. Health probes at `/api/health`, `/api/health/live`, `/api/health/ready`.                          |
+| Database package | `packages/db`                           | Prisma schema, generated client, migrations, and the idempotent seed script shared by both apps.                                                                                                                               |
+| Docker           | `docker/`                               | `docker-compose.yml` (postgres, api, web), `api.Dockerfile`, `web.Dockerfile`. Images run as non-root; the API image applies migrations on boot.                                                                               |
+| CI               | `.github/workflows/ci.yml`, `pages.yml` | Lint, typecheck, build on pull requests; static export to GitHub Pages.                                                                                                                                                        |
 
 ## Request flow
 
