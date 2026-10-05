@@ -32,13 +32,12 @@ Keep the subject line under 72 characters, imperative mood, no trailing period. 
 
 ## Checks to run
 
-| Check | Command |
-| ----- | ------- |
-| Lint | `pnpm lint` |
-| Typecheck | `pnpm typecheck` |
-| Build | `pnpm build` |
+| Check                 | Command           |
+| --------------------- | ----------------- |
+| Lint                  | `pnpm lint`       |
+| Typecheck             | `pnpm typecheck`  |
+| Build                 | `pnpm build`      |
 | Migrations up to date | `pnpm db:migrate` |
-
 
 ## Pull request checklist
 

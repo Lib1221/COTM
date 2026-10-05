@@ -35,12 +35,12 @@ pnpm docker:down
 
 ## Environment variables
 
-| Variable | Purpose |
-| -------- | ------- |
-| `DATABASE_URL` | Prisma connection string |
-| `JWT_SECRET` | Signing secret; 32+ characters required in production |
-| `ENABLE_SWAGGER` | `true` to expose `/api/docs` outside local Docker |
-| `NODE_ENV` | `development` or `production` |
+| Variable         | Purpose                                               |
+| ---------------- | ----------------------------------------------------- |
+| `DATABASE_URL`   | Prisma connection string                              |
+| `JWT_SECRET`     | Signing secret; 32+ characters required in production |
+| `ENABLE_SWAGGER` | `true` to expose `/api/docs` outside local Docker     |
+| `NODE_ENV`       | `development` or `production`                         |
 
 ## Quality checks
 
