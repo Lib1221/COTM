@@ -2,6 +2,9 @@ packages:
   - 'apps/*'
   - 'packages/*'
 allowBuilds:
+  # Pulled in by jest 30.5. Its platform packages ship prebuilt binaries,
+  # so the install script isn't needed.
+  '@parcel/watcher': false
   '@prisma/client': true
   '@prisma/engines': true
   '@scarf/scarf': false
