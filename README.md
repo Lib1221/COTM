@@ -228,3 +228,11 @@ E2E coverage includes: create project, BOQ total calculation, stock in, stock ou
 | `pnpm docker:up`   | Start full stack via Docker    |
 | `pnpm docker:down` | Stop Docker stack              |
 | `pnpm docker:seed` | Seed data in the API container |
+
+## Documentation
+
+Developer docs live in [`docs/`](docs/):
+
+- [Architecture](docs/ARCHITECTURE.md)
+- [Setup](docs/SETUP.md)
+- [Contributing](docs/CONTRIBUTING.md)

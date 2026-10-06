@@ -33,3 +33,13 @@ coverage/
 
 # docker
 docker/data/
+
+# Added: common build, cache, secret and editor files
+.pnp/
+.pnp.js
+.vercel/
+yarn-debug.log*
+yarn-error.log*
+.eslintcache
+.env.*
+.vscode/
